@@ -180,9 +180,9 @@ automáticamente se puede usar el siguiente construtor
 function CesarCypher(key, alf)
 	pos = Dict()
 	for (i, letter) in enumerate(alf)
-		por[letter] = i
+		pos[letter] = i
 	end
-	CesarCypher(ket, alf, pos)
+	CesarCypher(key, alf, pos)
 end
 ```
 
@@ -200,9 +200,9 @@ begin
 	function CesarCypher(key, alf)
 		pos = Dict()
 		for (i, letter) in enumerate(alf)
-			por[letter] = i
+			pos[letter] = i
 		end
-		CesarCypher(ket, alf, pos)
+		CesarCypher(key, alf, pos)
 	end
 end
 
@@ -273,7 +273,7 @@ begin
 		for (i, letter) in enumerate(alf)
 			por[letter] = i
 		end
-		CesarCypher(ket, alf, pos)
+		CesarCypher(key, alf, pos)
 	end
 end
 
@@ -293,33 +293,102 @@ donde ``i`` es la posición de la letra en el alfabeto, ``k`` es la llave y ``\S
 es el alfabeto.
 """
 
-# ╔═╡ 089ec0de-3af3-463e-83c8-b9b140df0859
-function cypher(cesar, letter)
-	new_pos = mod(cesar.pos[letter]-1+cesar.key, length(cesar.alf))+1
-	cesar.alf[new_pos]
-end
-
 # ╔═╡ 99619da2-9bfb-44cb-8512-a3deeabb5962
 md"""
 Ahora hay que agregar el cifrado afín. En este, determinar la letra a la que se cifra
 no solo es un desplazamiento, pero una transformación afín. En ``\mathbb{Z}``, estas
 transformaciones son de la forma
 
-``
-f(x) = xk_{1} + k_{2}
-``
+``f(x) = xk_{1} + k_{2}``
 
 Así que la regla para este cifrado sería
 
-``
-s_{i} \to s_{ik_{1}+k_{2} \text{ mod } |\Sigma|}
-``
+``s_{i} \to s_{ik_{1}+k_{2} \text{ mod } |\Sigma|}``
 
 Hay que notar que no todas las transformaciones afines son reversibles, por lo que no
 todas las llaves ``k_{1}, k_{2}`` representan cifrados válidos. Como se dijo
 anteriormente, la tranformación es reversible si las dos partes de la llave son primos
 relativos.
 """
+
+# ╔═╡ 006adc92-d376-4bbb-a6d7-9bae2fe8b0b5
+md"""
+¡Ups! Ya habíamos definido una función similar para el cifrado de César. Pero las
+funciones no son iguales. Usan diferentes cifrados e internamente.
+"""
+
+# ╔═╡ 8c537d4f-d75e-49f9-8957-b2f676b1e939
+md"""
+Como se dijo antes, uno de los principios de diseño de Julia es la separación de
+definición y comportamiento. Así, cada función está asociada a un nombre y puede tener
+varias implementaciones. Estas implementaciones se llaman métodos y se diferencian
+entre sí por los tipos de los argumentos.
+
+En el problema anterior, ningún argumento tiene tipo, así que Julia les asigna `Any`.
+Así que ambas implementaciones tienen el mismo tipo, lo que manda un error.
+
+Entonces, basta con agregar anotaciones del tipo a los argumentos de las funciones.
+"""
+
+# ╔═╡ 2f28de13-b30c-47e5-990a-11b7c2f13740
+md"""
+Para ver las implementaciones de una función, se puede usar la función `methods`
+"""
+
+# ╔═╡ 3e85741a-cd47-45ae-bb5f-dc5f60163657
+md"""
+Esto no está limitado a funciones definidas por el usuario. Por ejemplo, el operador
+`+` no es más que una función con muchas implementaciones (aquí solo se muestra los
+métodos para la suma con reales por brevedad)
+"""
+
+# ╔═╡ 8a1b70d4-8b59-4a39-b1ec-48768fe16ae8
+md"""
+Así que podríamos agregarle una implementación para los cifrados que definimos.
+Digamos que la suma de dos cifrados es la suma de sus llaves.
+"""
+
+# ╔═╡ 033231a6-90a3-44ee-b7db-69e46c8e3dc0
+begin
+	import Base.:+
+
+	function +(c1::CesarCypher, c2::CesarCypher)
+		CesarCypher(c1.key + c2.key, c1.alf)
+	end
+end
+
+# ╔═╡ f917c480-c371-4ef8-8a1d-607b6c074147
+function cypher(cesar::CesarCypher, letter)
+	new_pos = mod(cesar.pos[letter]-1+cesar.key, length(cesar.alf))+1
+	cesar.alf[new_pos]
+end
+
+# ╔═╡ 5fe89879-8bec-4104-95ab-eadc6e402a00
+function cypher(affine::AffineCypher, letter)
+	offset = affine.pos[letter]*affine.key[1] + affine.key[2]
+	new_pos = mod(offset - 1, length(affine.alf))+1
+	affine.alf[new_pos]
+end
+
+# ╔═╡ 6bb640e9-19e9-4d7d-a577-c76388c362fe
+methods(cypher)
+
+# ╔═╡ 53209fd1-da97-4ed9-b85c-27143e2088f6
+methods(+, [Real])
+
+# ╔═╡ 3cef50fd-d4d6-448a-a6d4-4fad7692a02f
+md"""
+Y así podemos ver que la suma de dos cifrados de César con llaves 1 y 2 es otro
+cifrado de César con llave 3.
+"""
+
+# ╔═╡ 2df08c42-6ac6-4de9-b9ad-67907ad74854
+begin
+	alf = ['A', 'B', 'C']
+	c1 = CesarCypher(1, alf)
+	c2 = CesarCypher(2, alf)
+	c1 + c2
+end
 
 # ╔═╡ cf599ae9-0b11-44b0-8c02-4eec5a5fa462
 md"""
@@ -334,6 +403,19 @@ md"""
 * [methods](https://docs.julialang.org/en/v1/manual/methods/)
 * [affine](https://brilliant.org/wiki/affine-transformations/)
 """
+
+# ╔═╡ 089ec0de-3af3-463e-83c8-b9b140df0859
+function cypher(cesar, letter)
+	new_pos = mod(cesar.pos[letter]-1+cesar.key, length(cesar.alf))+1
+	cesar.alf[new_pos]
+end
+
+# ╔═╡ ab7d7e77-31f5-45d9-bae2-fc2b1e304211
+function cypher(affine, letter)
+	offset = affine.pos[letter]*affine.key[1] + affine.key[2]
+	new_pos = mod(offset - 1, length(affine.alf))+1
+	affine.alf[new_pos]
+end
 
 # ╔═╡ Cell order:
 # ╟─81c186d0-988f-11eb-386a-cfc9c0478f55
@@ -359,6 +441,19 @@ md"""
 # ╟─170d487a-eda6-40fd-8de3-19b66497b5c7
 # ╟─2c2d5df6-891d-4487-b37f-9ee31442dff0
 # ╠═089ec0de-3af3-463e-83c8-b9b140df0859
-# ╠═99619da2-9bfb-44cb-8512-a3deeabb5962
+# ╟─99619da2-9bfb-44cb-8512-a3deeabb5962
+# ╠═ab7d7e77-31f5-45d9-bae2-fc2b1e304211
+# ╟─006adc92-d376-4bbb-a6d7-9bae2fe8b0b5
+# ╟─8c537d4f-d75e-49f9-8957-b2f676b1e939
+# ╠═f917c480-c371-4ef8-8a1d-607b6c074147
+# ╠═5fe89879-8bec-4104-95ab-eadc6e402a00
+# ╟─2f28de13-b30c-47e5-990a-11b7c2f13740
+# ╠═6bb640e9-19e9-4d7d-a577-c76388c362fe
+# ╟─3e85741a-cd47-45ae-bb5f-dc5f60163657
+# ╠═53209fd1-da97-4ed9-b85c-27143e2088f6
+# ╟─8a1b70d4-8b59-4a39-b1ec-48768fe16ae8
+# ╠═033231a6-90a3-44ee-b7db-69e46c8e3dc0
+# ╟─3cef50fd-d4d6-448a-a6d4-4fad7692a02f
+# ╠═2df08c42-6ac6-4de9-b9ad-67907ad74854
 # ╟─cf599ae9-0b11-44b0-8c02-4eec5a5fa462
-# ╠═4275ebf5-1dac-4ae4-b4a6-6b037e09892d
+# ╟─4275ebf5-1dac-4ae4-b4a6-6b037e09892d
