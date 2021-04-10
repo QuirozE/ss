@@ -8,17 +8,22 @@ using InteractiveUtils
 md"""
 # Cifrado de César
 
-Un problema interesante es como comunicarse de forma segura. Una técnica para esto es la criptografía, que consiste en transforma el mensaje usando una llave, de tal forma que sea difícil obtener el mensaje original sin usar la llave. Estas transformaciones se llaman cifrados.
+Un problema interesante es como comunicarse de forma segura. Una técnica para esto es
+la criptografía, que consiste en transforma el mensaje usando una llave, de tal forma
+que sea difícil obtener el mensaje original sin usar la llave. Estas transformaciones
+se llaman cifrados.
 """
 
 # ╔═╡ 93c9a7e2-8762-11eb-1301-29befdbc7615
 md"""
 
-Uno de los cifrados más antiguos es el cifrado de César. Este fue usado por el emperador romano Julio César durante la conquista de Galia (lo que hoy es Francia).
+Uno de los cifrados más antiguos es el cifrado de César. Este fue usado por el 
+emperador romano Julio César durante la conquista de Galia (lo que hoy es Francia).
 
 Este consiste en transforma el alfabeto con un desplazamiento.
 
-Por ejemplo, si se quisiera desplazar el alfabeto por tres letras se tendría el siguiente cifrado
+Por ejemplo, si se quisiera desplazar el alfabeto por tres letras se tendría el 
+siguiente cifrado
 
 | Original | A | B | C | D | E |$\dots$ | V | W | X | Y | Z |
 |----------|---|---|---|---|---|--------|---|---|---|---|---|
@@ -26,9 +31,11 @@ Por ejemplo, si se quisiera desplazar el alfabeto por tres letras se tendría el
 
 En este cifrado, la llave es el número de deplazamiento. En este caso `key = 3`.
 
-Si se conoce el mensaje cifrado, basta con recorrer el alfabeto en dirección opuesta. Es un cifrado bastante sencillo.
+Si se conoce el mensaje cifrado, basta con recorrer el alfabeto en dirección opuesta. 
+Es un cifrado bastante sencillo.
 
-Pero antes de ver los detalles de implementación, hay que introducir las cosas más básicas de Julia.
+Pero antes de ver los detalles de implementación, hay que introducir las cosas más 
+básicas de Julia.
 
 """
 
@@ -129,7 +136,9 @@ string("La llave es ", 3)
 # ╔═╡ fe25deb6-8777-11eb-395c-e7b6a72e5b74
 md"""
 #### Interpolación
-Otra operación sobre cadenas (muy relacionada a la concatenación) es la interpolación. Esto es insertar una expresión que se pueda evaluar a un valor dentro de una cadena. Para indicar que partes se va a insertar, se debe poner antes un `$`.
+Otra operación sobre cadenas (muy relacionada a la concatenación) es la interpolación. 
+Esto es insertar una expresión que se pueda evaluar a un valor dentro de una cadena. 
+Para indicar que partes se va a insertar, se debe poner antes un `$`.
 """
 
 # ╔═╡ 14200a8c-33da-43bc-840b-c9ba38cf3848
@@ -139,7 +148,11 @@ Otra operación sobre cadenas (muy relacionada a la concatenación) es la interp
 md"""
 ## Variables
 
-Es necesario guardar los datos intermedios. Para esto se usan variables. En Julia, las variables pueden ser casi lo que sea excepto palabras reservadas. A grandes rasgos, deben iniciar con una letra Unicode, y pueden estar seguido de casi cualquier cosas. Más detalles en la [documentación oficial](https://docs.julialang.org/en/v1/manual/variables/).
+Es necesario guardar los datos intermedios. Para esto se usan variables. En Julia, las 
+variables pueden ser casi lo que sea excepto palabras reservadas. A grandes rasgos, 
+deben iniciar con una letra Unicode, y pueden estar seguido de casi cualquier cosas. 
+Más detalles en la [documentación oficial]
+(https://docs.julialang.org/en/v1/manual/variables/).
 
 Se declaran con la siguiente sintaxis.
 
@@ -156,7 +169,9 @@ llave = 3
 
 # ╔═╡ b8c0dafe-8779-11eb-0704-abb693c60b0e
 md"""
-Ya tenemos la llave y el mensaje a cifrar. Hay que crear el mensaje cifrado desplazando todas las letras del mensaje original. Pero, ¿cómo sabemos siquiera el orden sobre el cuál hay que desplazar?
+Ya tenemos la llave y el mensaje a cifrar. Hay que crear el mensaje cifrado 
+desplazando todas las letras del mensaje original. Pero, ¿cómo sabemos siquiera el 
+orden sobre el cuál hay que desplazar?
 
 Para esto se puede introducir un nuevo tipo de valor
 """
@@ -165,7 +180,8 @@ Para esto se puede introducir un nuevo tipo de valor
 md"""
 ## Arreglos
 
-Estos son un tipo de estrucutras de datos que permiten guardar valores en una secuencia. Se defininen poniendo los elementos entre corchetes
+Estos son un tipo de estrucutras de datos que permiten guardar valores en una 
+secuencia. Se defininen poniendo los elementos entre corchetes
 """
 
 # ╔═╡ 6c1feb1c-877a-11eb-0413-a75610ec89be
@@ -175,7 +191,8 @@ arreglo = [1, "hola", 9.0]
 md"""
 ### Operaciones básicas
 
-Para acceder a los elementos del arreglo, se usa el índice del elementos deseado entre corchetes
+Para acceder a los elementos del arreglo, se usa el índice del elementos deseado entre 
+corchetes
 """
 
 # ╔═╡ ac232512-877a-11eb-3745-9713e5b283db
@@ -194,7 +211,9 @@ arreglo
 
 # ╔═╡ f6e1759a-877c-11eb-06d9-2543b9334985
 md"""
-Para agregar un elemento se usa la función `push!`. Cuidado, porque esta función modifica la estructura, así que llamarla varias veces con los mismos parámetros no tendrá el mismo resultado.
+Para agregar un elemento se usa la función `push!`. Cuidado, porque esta función 
+modifica la estructura, así que llamarla varias veces con los mismos parámetros no 
+tendrá el mismo resultado.
 """
 
 # ╔═╡ 726017b0-877d-11eb-345b-e3d86663f976
@@ -224,18 +243,23 @@ alfabeto = [
 
 # ╔═╡ 5378cd9e-877b-11eb-03ab-670b9ae5a144
 md"""
-Ahora, para obtener la letra desplazada, basta con encontrar su índice en el alfabeto, sumarle 3 y tomar el valor del arreglo en esa posición.
+Ahora, para obtener la letra desplazada, basta con encontrar su índice en el alfabeto, 
+sumarle 3 y tomar el valor del arreglo en esa posición.
 
-Pero ¿cómo se obtiene el índice de una letra? Se necesita algo similar al opuesto de un arreglo. Algo que te pueda obtener los índices usando los valores.
+Pero ¿cómo se obtiene el índice de una letra? Se necesita algo similar al opuesto de 
+un arreglo. Algo que te pueda obtener los índices usando los valores.
 """
 
 # ╔═╡ 2661e210-877f-11eb-1608-030d3b914161
 md"""
 ## Diccionarios
 
-Son estructuras similares a los arreglos, pero en lugar de índices se puede acceder a los valores usando (casi) cualquier cosa. Como muchas cosas no están ordenadas, entonces los diccionarios no definien un orden.
+Son estructuras similares a los arreglos, pero en lugar de índices se puede acceder a 
+los valores usando (casi) cualquier cosa. Como muchas cosas no están ordenadas, 
+entonces los diccionarios no definien un orden.
 
-Se declaran con el constructor `Dict`, junto con las parejas de llave valor `key => val`.
+Se declaran con el constructor `Dict`, junto con las parejas de llave valor `key => 
+val`.
 """
 
 # ╔═╡ 8b09f194-877f-11eb-00e6-85a943d5a4da
@@ -245,7 +269,8 @@ dict = Dict("a" => 14, 5 => "abalone")
 md"""
 Se acceden y modifican elementos con la misma sintaxis que los arreglos.
 
-Cabe notar que como no tienen orden, agregar y quitar elementos es un poco diferentes. Para agregar un nuevo elemento basta con asignarlo.
+Cabe notar que como no tienen orden, agregar y quitar elementos es un poco diferentes. 
+Para agregar un nuevo elemento basta con asignarlo.
 """
 
 # ╔═╡ c2c41b78-877f-11eb-3868-3fb028f3fed3
@@ -285,15 +310,17 @@ A_crifrada = alfabeto[indices_alfabeto['A']+llave]
 
 # ╔═╡ 56fbf961-8e34-4838-8fbc-8dcf92251faf
 md"""
-Ahora, tener que escribir `alfabeto[indices_alfabeto[letra]+llave]` cada vez que se quiera cifrar una letra sería tedioso. Para esto se puede definir una función que lo haga.
+Ahora, tener que escribir `alfabeto[indices_alfabeto[letra]+llave]` cada vez que se 
+quiera cifrar una letra sería tedioso. Para esto se puede definir una función que lo 
+haga.
 """
 
 # ╔═╡ 2ab0e75b-b07b-48d6-8dc4-413ab838af82
 md"""
 ## Funciones
 
-
-Las funciones permiten encapsular cierto comportamiento para no repetir código. Son
+Todas las acciones que manipulan datos vistas hasta ahora son funciones de Julia. 
+Estas permiten encapsular cierto comportamiento para no repetir código. Son
 similares a las funciones matemáticas. Por ejemplo, para ``f(x) \to x^{2}+2``, la
 sintaxis para declararla sería
 """
@@ -327,7 +354,8 @@ argumentos puede dar resultados diferentes.
 
 # ╔═╡ e7ef2738-0d04-4726-8750-6d3af60e1c60
 md"""
-Así, se puede esribir el cifrado anterior como una función que reciba la letra a cifrar junto con la llave y devuelva la letra cifrada.
+Así, se puede esribir el cifrado anterior como una función que reciba la letra a 
+cifrar junto con la llave y devuelva la letra cifrada.
 """
 
 # ╔═╡ 0a794f1e-bae0-48bc-8094-c5700c029c19
@@ -627,7 +655,7 @@ md"""
 # ╠═a0c45f7d-00ef-45ef-ae2e-5527048985a2
 # ╠═8e4cf0f3-84a7-4622-b2e4-064d6a0ac09b
 # ╟─67fdce81-e5ab-412f-8ac9-99f6f16abae7
-# ╠═da0124e3-8504-4f0c-a0bd-2d35f07fa34e
+# ╟─da0124e3-8504-4f0c-a0bd-2d35f07fa34e
 # ╠═b561a89e-72fe-4e06-88eb-dd4fdb7ea7d9
 # ╟─daef06cb-b9d8-4b27-8f59-82745fd9ecb9
 # ╠═e554f82c-8127-4c20-a6f0-458f24007532
