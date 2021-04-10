@@ -12,11 +12,12 @@ Si bien el cifrado de César es interesante, hay muchos más cifrados. Más aún
 cifrados no están limitados a texto, si no que se pueden cifrar una gran cantidad de
 datos.
 
-Si se quisira crear un sistema que permita cifrar de manera intercambiable y flexible, tanto en el tipo de entrada como en el método de cifrado. Algo de la forma
+Si se quisira crear un sistema que permita cifrar de manera intercambiable y flexible,
+tanto en el tipo de entrada como en el método de cifrado. Algo de la forma
 
 ```julia
 cypher(bytes_buffer, type=:cesar, key=131)
-cypher(text, type=:vigenere, key="Supercalifragilisticoespiralidoso")
+cypher(text, type=:affine, key=(1, 2))
 ```
 
 Esto es más complicado que lo hecho anteriormente, y requiere usar todo el poder del
@@ -95,8 +96,8 @@ md"""
 ## Tipos primitivos
 
 Los mencionandos antes son tipos primitivos. Estos se guardan dirctamente en registros
-al momento de ejecución, por lo que necesitan saber su tamaño en bits. Se declaran de
-la siguiente manera
+del procesador al momento de ejecución, por lo que necesitan saber su tamaño en bits.
+Se declaran de la siguiente manera
 
 ```julia
 primitive type Bool <: Integer 8 end
@@ -128,19 +129,163 @@ Pero esto era porque había como variables globales el alfabeto y los índices d
 letras.
 
 Para mantener todo junto, se podría poner como atributos del tipo.
-"""
 
-# ╔═╡ 7ab12f3d-7bb1-4985-bc35-68c442b88cb3
+```julia
 struct CesarCypher <: Cypher
 	key::Int64
 	alf::Array{Char}
 	pos::Dict{Char, Int64}
 end
+```
+"""
 
-# ╔═╡ c1debed9-9754-4293-b1f1-b54ec8c8dd6d
+# ╔═╡ 588798f9-4e75-4f0f-bbf2-39641f6de0bd
+md"""
+Ahora que se tiene definido el tipo compuesto, ¿cómo se crea?
+"""
+
+# ╔═╡ b2a19d5f-3279-4d7f-87cd-f91c67cc4c1c
+md"""
+### Constructores
+"""
+
+# ╔═╡ 9fc0a41b-9ed6-4e6a-8d42-cb75930da59d
+md"""
+Cada tipo compuesto implícitamente define una función del mismo nombre del tipo,
+donde los parámetros son los atributos del tipo y donde el valor de retorno es uno 
+nuevo valor del tipo compuesto. Esta función se llama constructor.
+
+Este constructor se usaría de la siguiente manera
+
+```julia
+cypher = CesarCypher(0, [], Dict())
+```
+"""
+
+# ╔═╡ de63bf2e-a5dd-47bf-8c84-76e63b92f49f
+md"""
+Esto puede ser suficiente en muchos casos, pero se puede notar que las posiciones 
+se pueden generar usando el alfabeto, sin necesidad de pasarlo explícitamente. Sin
+embargo, el constructor por omisión debe recibir todos los atributos.
+
+Pero al ser solo una función, se puede crear otra función constructor que haga lo que
+queremos. Estas funciones extra se llaman constructores externos. Deben tener el mismo
+nombre que el tipo compuesto, y regresar una instancia del tipo compuesto que deben
+generar usando otros constructores (como el constuctor por omisión).
+
+Por ejemplo, para solo recibir la llave y el alfabeto y generar las posiciones
+automáticamente se puede usar el siguiente construtor
+
+```julia
+function CesarCypher(key, alf)
+	pos = Dict()
+	for (i, letter) in enumerate(alf)
+		por[letter] = i
+	end
+	CesarCypher(ket, alf, pos)
+end
+```
+
+Por lo que la definición final del tipo sería la siguiente
+"""
+
+# ╔═╡ c30f6738-57e4-4918-a64f-f0b38dc1b16d
+begin
+	struct CesarCypher <: Cypher
+		key::Int64
+		alf::Array{Char}
+		pos::Dict{Char, Int64}
+	end
+	
+	function CesarCypher(key, alf)
+		pos = Dict()
+		for (i, letter) in enumerate(alf)
+			por[letter] = i
+		end
+		CesarCypher(ket, alf, pos)
+	end
+end
+
+# ╔═╡ 87a6b719-e24e-4fec-9265-3757ee960dc8
+md"""
+¿Esto es suficiente para inicializar los valores de los tipos compuestos? Hay algunos
+casos más. Para esto, vamos a ver otro tipo de cifrado un poco más complicado: los
+cifrados afines. Los detalles del proceso de cifrado se verán más adelante, pero su
+llave consta de dos primos relativos. El tipo compuesto para este cifrado podría ser
+el siguiente
+
+```julia
+struct AffineCypher <: Cypher
+	key::Tuple{Int64, Int64}
+	alf::Array{Char}
+	pos::Dict{Char, Int64}
+end
+```
+"""
+
+# ╔═╡ 9da18c8c-fd0b-4309-b366-c3f537742560
+md"""
+¿Sería posible verificar esto al crear el tipo? Claramente no es posible usando
+constructores externos, pues estos simplemente añaden otro tipo de constructor, no
+pueden modificar los que ya existen.
+
+Para esto se tienen que usar constructores internos. Estos remplazan al constructor
+por omisión. Deben ser declarados dentro del cuerpo del `struct` al que pertenencen.
+
+En estos, se crea una nueva instancia del tipo usando la función `new` que no 
+necesariamente inicializa los atributos. Esto resulta útil para tipos recursivos.
+"""
+
+# ╔═╡ 88c36bda-e2f5-48a1-a39b-cbac20fd9608
+md"""
+Un constructor interno que implemente la restricción de los cifrados afines podría ser
+el siguiente
+
+```julia
+function AffineCypher(key, alf, pod)
+	if gcd(key[1], key[2]) != 1
+		error("Non-reversible affine transformation")
+	end
+	new(key, alf, pos)
+end
+```
+
+Por lo que la declaración completa del tipo sería
+"""
+
+# ╔═╡ 4b0894c4-fad8-4d56-b8d2-2ba4db516c29
+begin
+	struct AffineCypher <: Cypher
+		key::Tuple{Int64, Int64}
+		alf::Array{Char}
+		pos::Dict{Char, Int64}
+
+		function AffineCypher(key, alf, pod)
+			if gcd(key[1], key[2]) != 1
+				error("Non-reversible affine transformation")
+			end
+			new(key, alf, pos)
+		end
+	end
+	
+	function AffineCypher(key, alf)
+		pos = Dict()
+		for (i, letter) in enumerate(alf)
+			por[letter] = i
+		end
+		CesarCypher(ket, alf, pos)
+	end
+end
+
+# ╔═╡ 170d487a-eda6-40fd-8de3-19b66497b5c7
+md"""
+## Despacho múltiple
+"""
+
+# ╔═╡ 2c2d5df6-891d-4487-b37f-9ee31442dff0
 md"""
 Ahora hay que implementar el cifrado, pero usando este nuevo tipo. Como repaso la
-letra ``s_{i}``, se cifra con la sguiente regla regla
+letra ``s_{i}``, se cifra con la siguiente regla regla
 
 ``s_{i} \to s_{i+k \text{ mod } |\Sigma|}``
 
@@ -148,33 +293,32 @@ donde ``i`` es la posición de la letra en el alfabeto, ``k`` es la llave y ``\S
 es el alfabeto.
 """
 
-# ╔═╡ c311af2e-a36b-40db-b1cc-479ec11a9571
+# ╔═╡ 089ec0de-3af3-463e-83c8-b9b140df0859
 function cypher(cesar, letter)
 	new_pos = mod(cesar.pos[letter]-1+cesar.key, length(cesar.alf))+1
 	cesar.alf[new_pos]
 end
 
-# ╔═╡ 6625a474-2cf4-4537-b357-957969be0da6
-c = CesarCypher(4, ['A', 'B', 'C'], Dict('A' => 1, 'B' => 2, 'C' => 3))
-
-# ╔═╡ 0a12e55f-7212-44b7-a08d-43e80258bb40
-cesar_cypher('B', c)
-
-# ╔═╡ b4519a69-9236-4bc0-aac0-cd4df13bf578
+# ╔═╡ 99619da2-9bfb-44cb-8512-a3deeabb5962
 md"""
-### Constructores
-"""
+Ahora hay que agregar el cifrado afín. En este, determinar la letra a la que se cifra
+no solo es un desplazamiento, pero una transformación afín. En ``\mathbb{Z}``, estas
+transformaciones son de la forma
 
-# ╔═╡ 15209f8b-32c9-4577-9cee-0ce09b8b942e
-struct AffineCypher <: Cypher
-	key::Tuple{Int64, Int64}
-	alf::Array{String}
-	pos::Dict{String, Int64}
-end
+``
+f(x) = xk_{1} + k_{2}
+``
 
-# ╔═╡ 170d487a-eda6-40fd-8de3-19b66497b5c7
-md"""
-## Despacho múltiple
+Así que la regla para este cifrado sería
+
+``
+s_{i} \to s_{ik_{1}+k_{2} \text{ mod } |\Sigma|}
+``
+
+Hay que notar que no todas las transformaciones afines son reversibles, por lo que no
+todas las llaves ``k_{1}, k_{2}`` representan cifrados válidos. Como se dijo
+anteriormente, la tranformación es reversible si las dos partes de la llave son primos
+relativos.
 """
 
 # ╔═╡ cf599ae9-0b11-44b0-8c02-4eec5a5fa462
@@ -186,7 +330,9 @@ md"""
 md"""
 ## Referencias
 * [types](https://docs.julialang.org/en/v1/manual/types/)
+* [constructors](https://docs.julialang.org/en/v1/manual/constructors/)
 * [methods](https://docs.julialang.org/en/v1/manual/methods/)
+* [affine](https://brilliant.org/wiki/affine-transformations/)
 """
 
 # ╔═╡ Cell order:
@@ -201,13 +347,18 @@ md"""
 # ╟─4d53bf55-9266-4419-bea5-cd576e1c9c1a
 # ╟─1bb9d1e9-21fc-44e9-916c-b83925a40786
 # ╟─34d4ff4a-ce8e-4013-be0d-e1ca06de2fbc
-# ╠═7ab12f3d-7bb1-4985-bc35-68c442b88cb3
-# ╟─c1debed9-9754-4293-b1f1-b54ec8c8dd6d
-# ╠═c311af2e-a36b-40db-b1cc-479ec11a9571
-# ╠═6625a474-2cf4-4537-b357-957969be0da6
-# ╠═0a12e55f-7212-44b7-a08d-43e80258bb40
-# ╟─b4519a69-9236-4bc0-aac0-cd4df13bf578
-# ╠═15209f8b-32c9-4577-9cee-0ce09b8b942e
+# ╟─588798f9-4e75-4f0f-bbf2-39641f6de0bd
+# ╟─b2a19d5f-3279-4d7f-87cd-f91c67cc4c1c
+# ╟─9fc0a41b-9ed6-4e6a-8d42-cb75930da59d
+# ╟─de63bf2e-a5dd-47bf-8c84-76e63b92f49f
+# ╠═c30f6738-57e4-4918-a64f-f0b38dc1b16d
+# ╟─87a6b719-e24e-4fec-9265-3757ee960dc8
+# ╟─9da18c8c-fd0b-4309-b366-c3f537742560
+# ╟─88c36bda-e2f5-48a1-a39b-cbac20fd9608
+# ╠═4b0894c4-fad8-4d56-b8d2-2ba4db516c29
 # ╟─170d487a-eda6-40fd-8de3-19b66497b5c7
+# ╟─2c2d5df6-891d-4487-b37f-9ee31442dff0
+# ╠═089ec0de-3af3-463e-83c8-b9b140df0859
+# ╠═99619da2-9bfb-44cb-8512-a3deeabb5962
 # ╟─cf599ae9-0b11-44b0-8c02-4eec5a5fa462
-# ╟─4275ebf5-1dac-4ae4-b4a6-6b037e09892d
+# ╠═4275ebf5-1dac-4ae4-b4a6-6b037e09892d
