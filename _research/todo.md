@@ -25,6 +25,7 @@ Todos
 
 ## Optimization problems
 
+- [ ] Finish *BFS* correctness proof
 - [ ] Write notes for Djikstra's algorithm
 - [ ] Write notes for Bellman-Ford's algorithm
 - [ ] Write and introduction to game theory

@@ -18,15 +18,73 @@ el orden. La~\index{longitud}longitud $l(p) = k$ del camino es la cantidad de
 arista que tiene.
 
 Una trayectoria es un camino que no repite vértices, y una $uv$-trayectoria es
-una gráfica que sea trayectoria, que inicie en $u$ y que termine en $v$.
-
-Es claro que entre un par de vértices puede haber más de una trayectoria. La
+una gráfica que sea trayectoria, que inicie en $u$ y que termine en $v$. Es
+claro que entre un par de vértices puede haber más de una trayectoria. La
 longitud de la más corta se denomia la~\index{distancia}distancia $d(u, v)$ de
-los vértices.
+los vértices, o infinito si no existe ninguna trayectoria.
 
-Un 
+Un problema básico en gráfica es que dada una gráfica $G$ y dos de sus vértices
+$u, v$, encontrar su distancia. En su forma más simple, esto se puede hacer
+iniciando en $u$ y revisando todos los vértices a distancia 1, que serían sus
+vecinos. Si no se encuentra $v$ entonces habría que revisar a los vértices a
+distancia 2, que sería los vecinos de los vecinos que no hayan sido revisados
+ya. Esto se realiza sucesivamente hasta encontrar a $v$ o hasta que no haya más
+vértices por revisar.
 
-Un 
+Este tipo de acciones se conocen como búsquedas, pues se busca un vértice que
+cumpla algo, en este caso que sea $v$. En particular, una búsqueda donde se
+revisan todos los vértices a una distancia dada antes de avanzar se conoce como
+una~\index{BFS}búsqueda en amplitud, o BFS por sus siglas en inglés.
+
+Para decidir el siguiente vértice a revisar se requiere algún tipo sala de
+espera, donde se guarden los vértices vecinos al vértice actual que deberán ser
+visitados eventualmente. Para garantizar que se visiten a todos los vértices a
+distancia $k$ antes de visitar alguno a distancia $k+1$, basta notar que todo
+vértice a distancia $k+1$ es adyacente a un vértice a distancia $k$. Así que
+basta con respetar el orden de exploración. Es decir, revisar siempre el vértice
+que lleva más tiempo en la sala de espera.
+
+Esta estrucutura se conoce como una cola, y tiene dos operaciones. $push$
+que añade un elemento al final de la cola y $pop$ que saca el primer
+elemento de la cola. Los detalles están en el algoritmo \ref{alg:bfs}.
+
+\begin{algorithm}
+  \caption{Distancia usando BFS}
+  \label{alg:bfs}
+  \begin{algorithmic}[1]
+    \Require{$G$ gráfica, $u, v \in V(G)$}
+    \Ensure{Encontrar $d_{G}(u, v)$}
+    \State{$Q \gets$ []}
+    \State{$i \gets$ 0}
+    \State{$push(Q, u)$}
+    \Statex
+    \While{$Q \ne$ []}
+    \State{$x \gets pop(Q)$}
+    \For{$v_{x} \in N(x)$}
+    \If{$x = v$}
+    \State \Call{Return}{$i$}
+    \EndIf
+    \Statex
+    \If{$v_{x}$ no ha sido visitado}
+    \State{marcar $v_{x}$ como visitado}
+    \State{$push(Q, v_{x})$}
+    \EndIf
+    \Statex
+    \State{$i \gets i + 1$}
+    \EndFor
+    \EndWhile
+    \Statex
+    \State \Call{Return}{$\infty$}
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{proposition}
+  El algoritmo \ref{alg:bfs} devuelve la distancia entre dos vértices.
+\end{proposition}
+
+\begin{proof}
+  Sea
+\end{proof}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Algoritmo de Dijkstra}
