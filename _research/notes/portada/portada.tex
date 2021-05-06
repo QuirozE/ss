@@ -1,0 +1,30 @@
+\documentclass[titlepage]{book}
+\usepackage[suftesi]{frontespizio}
+
+\begin{document}
+
+\begin{frontespizio}
+\Logo[1.5cm]{../figuras/logounam}
+\Istituzione{Universidad Nacional Autónoma de México}
+\Divisione{
+Instituto de Investigaciones en Matemáticas \\
+Aplicadas y en Sistemas
+}
+\Scuola{Departamento de Ciencias de la Computación}
+\Titoletto{Programa de Sevicio Social}
+\Titolo{
+Estudio, Diseño e Implementación de\\
+Algoritmos Paralelos Usando GPU's
+}
+\Sottotitolo{Problemas de optimización sobre gráficas}
+\NCandidato{Estudiante}
+\Candidato{Edgar Quiroz Castañeda} 
+\NRelatore{Supervisor}{}
+\Relatore{Dr. Oscar Alejandro Esquivel Flores}
+\Piede{Trabajo realizado en 2021}
+\end{frontespizio}
+
+\IfFileExists{\jobname-frn.pdf}{}{%
+\immediate\write18{pdflatex \jobname-frn}} % ASSOLUTAMENTE CTT, è il comando che materialmente vi genera il frontespizio.
+
+\end{document}

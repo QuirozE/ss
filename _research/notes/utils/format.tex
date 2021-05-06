@@ -1,0 +1,38 @@
+%\makeatletter
+% \renewcommand{\p@subfigure}{}
+  %Esto lo agrego yo para tener subfiguras a1, b1, ... a2, b2, ... 
+  %Se reinicia cada vez que una nueva figura es convocada (como es debido).
+%  \newcounter{subfiggroup}[figure] 
+%\makeatother
+
+% Overriding the creation of empty double pages
+% By making an empty pages, all pending figures are printed
+% Clears odd/even pair
+% No headers on empty even pages
+\makeatletter
+\def \cleardoublepage{
+    \clearpage % end current page and output pending figures
+    \if@twoside
+        \ifodd\c@page %c@page is the page counter
+        \else % if even (ugly but the easiest with vanilla Tex)
+            \mbox{} % some text is needed to get a new page?
+            \thispagestyle{plain} % removes header
+            \newpage
+            %\if@twocolumn
+            %    \hbox{}
+            %    \newpage
+            %\fi
+        \fi
+    \fi
+}
+\makeatother
+
+% Code for creating fully-empty pages
+% Fully empty pages before command is called
+%\makeatletter
+%\def\clearfullypage{\clearpage\if@twoside \ifodd\c@page\else
+%    \hbox{}
+%    \thispagestyle{empty}
+%    \newpage
+%    \if@twocolumn\hbox{} \newpage\fi\fi\fi}
+%\makeatother \clearpage{\pagestyle{empty}\clearfullypage}

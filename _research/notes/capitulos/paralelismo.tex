@@ -1,0 +1,130 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Paralelismo}
+
+\section{Motivación}
+
+\section{Tipos de arquitectura}
+
+Tradicionalmente se dividen los tipos de sistemas en base a como tratan el flujo
+de datos y de instrucciones. Esto se conoce como taxonomía de Flynn
+\cite{Pacheco2011}. Están las siguientes  categorías
+
+\begin{itemize}
+    \item \textit{SISD}\index{SISD} (Single Instruction Single Data): sistemas
+    sin paralelismo.
+    
+    \item \textit{SIMD}\index{SIMD} (Single Instruction Multiple Data):
+    sistemas que pueden aplicar una operación a vectores o arreglos de datos en
+    una unidad de tiempo.
+    
+    \item \textit{MIMD}\index{MIMD} (Multiple Data Multiple Instructions):
+    sistemas donde cada unidad de procesamiento es independiente.
+\end{itemize}
+
+\subsection{Sistemas \textit{SISD}}
+
+\index{ILP}
+\index{pipelining}
+\index{multiple issue}
+
+\subsection{Sistemas \textit{SIMD}}
+
+En estos sistemas hay una única unidad de control con varias unidades aritmético lógicas (\textit{ALU}). Al recibir la instrucción, la unidad de control avisa a
+todas las \textit{ALUs} para que apliquen la operación al dato correspondiente.
+Este tipo de paralelismo se denomina \textbf{paralelismo de datos}
+\index{paralelismo de datos}.
+
+Deben tener registros capaces de guarda vectores y operaciones optimizadas para
+leer y escribir de los elementos en estos registros. Todas las operaciones son
+síncronas y totalmente uniformes. Además de operaciones sobre los elementos,
+suelen haber operaciones que actúan sobre los vectores sin tener que acceder a
+cada elementos, como obtener la longitud del vector.
+
+A pesar de solo ser factibles en operaciones muy restringidas, estos sistemas
+no suelen introducir problemas nuevos a los programas y su uso es bastante
+directo. Además, la mejora en rendimiento al usarlos suele ser aceptable.
+
+Hoy en día, cada núcleo de un \textit{CPUs} \index{CPU} cuentan con
+instrucciones que permiten este tipo de operaciones. No son un sistema
+exclusivamente \textit{SIMD}, ya que tener varios núcleos le dan 
+características \textit{MIMD}.
+
+Las unidades de procesamiento gráfico (\textit{GPU}) \index{GPU} también tienen
+este tipo de funcionalidad. Además, como las imágenes suelen ocupar mucha
+memoria, tiene memoria de gran tamaño optimizada para el manejo con hilos a
+nivel de hardware \index{multiple issue}. Curiosamente, esto hace que tenga mal
+desempeño en problemas pequeños. Al igual que los \textit{CPUs}, tampoco son
+exclusivamente un sistema \textit{SIMD}, ya que suelen tener más de un núcleo.
+
+\subsection{Sistemas \textit{MIMD}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Tipos de Problemas}
+
+Pancake \cite{Pancake1996} propone algunas reglas que a grandes rasgos permitan
+determinar si vale la pena dar una solución paralela a un problema.
+
+\begin{enumerate}
+
+    \item Si el problema es de paralelismo perfecto, probablemente sea fácil de
+    paralelizar y se obtengan ganancia considerable en rendimiento.
+
+    \item Si el problema es de paralelismo de \textit{pipeline}, sólo valdría
+    la pena paralelizarlo si se puede balancear la carga de trabajo entre las
+    etapas.
+
+    \item Si el problema es de paralelismo totalmente síncrono, valdría la pena
+    paralelizar dependiendo de que tan uniformemente se puede distriubir la
+    carga.
+
+    \item Si el problema es de paralelismo vagamente síncrono, solo valdría la
+    pena paralelizarlo si hay muy pocas interacciones entre procesos.
+
+    \item Un problema de paralelismo perfecto podría implementarse en un sistema
+    \textit{MIMD}, pero sería problemático hacerlo en un sistema \textit{SIMD}.
+    
+    \item Un problema de paralelismo de \textit{pipeline} probablemente se
+    desempeñe mejor en un sistema de memoria compartida o en un SMP (siempre y
+    cuando cada etapa queda en una unidad de procesamiento). Podría funcionar
+    decentemente en un sistema distribuido si la conexión entre etapas es lo
+    suficientemente rápida.
+    
+    \item Un problema totalmente síncrono probablemente se desempeñe mejor en un
+    sistema SIMD. Pero esto requeriría que todas las operaciones sean uniformes.
+    De no ser así, una opción decente sería un sistema de memoria compartida.
+    
+    \item Para un problema vagamente síncrono la mejor opción sería un sistema
+    de memoria compartida. Un sistema distribuido funcionaría siempre y cuando
+    haya muchas operaciones entre cada interacción de los procesos.
+    
+    \item Lenguaje
+    
+    \item El tiempo de ejecución de una versión secuencia del programa se puede
+    usar para estimar el desempeño del programa paralelo.
+    
+    \item Debido a las restricciones de las secciones secuenciales del programa,
+    probablemente no valga la pena paralelizar un programa con una fracción
+    paralelizable menor a 0.95.
+    
+    \item Hay que estimarlo con cuidado como cambia el desempeño del programa
+    al cambiar la entrada. Este depende de la naturaleza del problema.
+    
+    \item El desempeño final siempre será peor al estimado.
+    
+    \item Aunque se puede intentar resolver pérdidas de tiempo surgidas por la
+    concurrencia, en general dependerá de la naturaleza del problema y del
+    equipo usado.
+    
+    \item Un problema de baja granuralidad tendrá un desempeño decente en
+    cualquier sistema. Un sistema de granuralidad media/alta probablemente solo
+    sea decente en un sistema SIMD.
+    
+    \item Para sistemas distribuidos, es útil estimar la equivalencia de
+    mensaje.
+    
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Métricas de desempeño}
+
+\section{Resumen}
