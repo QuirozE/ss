@@ -1,110 +1,194 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Optimización sobre gráficas}
 
-\section{Motivación}
+Dado un conjunto de elementos de cualquier tipo, se puede abstraer las
+relaciones entre ellos con diagramas. Cada elemento podría ser un punto que está
+unido por una línea a los demás puntos con los que está relacionado. Estos
+elementos podrían ser relaciones de amistad en una red social, vías de
+comunicación entre centros de abastecimiento, o conxiones de red entre
+servidores.
+
+Estas abtracciones suelen ser suficientes para resolver problemas importantes
+en estos contextos. Por ejemplo, saber la ruta más corta para distribuir
+productos entre varios lugares, saber la mínima cantidad de servidores a retirar
+para colapsar una red o saber como maximizar el flujo de energía en una red
+eléctrica.
+
+Muchos de estos problemas se pueden plantear como problemas de optimización.
+Varias técnicas, tanto algorítimicas como heurísticas, se han desarrollado para
+resolver estos tipos de problemas. A continuación se presentar algunas de ellas.
+
+\section{Definiciones básicas}
+
+Para los propósitos de este trabajo, se usarán las definiciones de
+\cite{Diestel2017}. En estas, se toma una \iem{gráfica} $G$ como una tupla
+$\tpl{V, E}$, donde $V$ es un conjunto no vacío y $E$ es una familia de
+subconjuntos de $V$, todos de cardinalidad dos. Además, se pide que $V$ y $E$
+sean disjuntos. Se suele denotar estos conjuntos como $V(G)$ y $E(G)$ para
+evitar ambigüedad.
+
+Los elementos de $V$ se denominan \iem{vértices}, y los de $E$ \iem{aristas}.
+Para simplificar notación, una arista $\set{u, v}$ se suele denotar como $uv$.
+La cantidad de vértices en una gráfica se llama el \iem{orden} y la cantidad de
+aristas el \iem{tamaño}. Una arista $e$ es \iem{incidente} a un vértice $v$ si
+$v \in e$. Si existe una arista $uv$, entonces $u, v$ son \iem{adyacentes}. El
+conjunto de vértices adyacente a un vértice $v$ se denomia su \iem{vecindad} y
+se denota como $N_{G}(v)$ o $N(v)$ si no hay ambigüedad.
+
+Luego, sean $G, H$ dos gráfica, y $\phi: V(G) \to V(H)$ una función que preserva
+adyacencias. Es decir, si $uv \in E(G)$, entonces $\phi(x)\phi(y) \in E(H)$.
+$\phi$ es un \iem{homomorfismo}. Si $\phi^{-1}$ también es un homomorfismo,
+entonces $\phi$ es \iem{isomorfismo}. En este caso se dice que $G$ y $H$ son
+isomorfas y se denota como $G \cong H$. En general no se hace distinción entre
+gráficas isomorfas.
+
+Dadas dos gráficas $G, H$, si tanto los vértices como las aristas de $H$ son
+subconjuntos de los vértices y aristas de $G$, $H$ es una \iem{subgráfica} de
+$G$ y $G$ es una \iem{supergráfica} de $H$, que se denota como $H \subseteq G$.
 
 \section{Distancia}
 
 Intuitivamente, una trayectoria es una manera de llegar de un vértice a otro a
-través de las aristas. Formalmente, un~\index{camino}camino es una gráfica tal
-que existe un orden lineal de sus vértices
+través de las aristas. Formalmente, una \iem{trayectoria} es una gráfica tal que
+existe un orden lineal de sus vértices
 
 \[
     p = (x_{0}, x_{1}, \dots, x_{k-1}, x_{k})
 \]
 
 de tal manera que dos vértices son adyacentes si y solo si son consecutivos en
-el orden. La~\index{longitud}longitud $l(p) = k$ del camino es la cantidad de
-arista que tiene.
+el orden. La \iem{longitud} $l(p) = k$ del camino es la cantidad de arista en el
+camino.
 
-Una trayectoria es un camino que no repite vértices, y una $uv$-trayectoria es
-una gráfica que sea trayectoria, que inicie en $u$ y que termine en $v$. Es
-claro que entre un par de vértices puede haber más de una trayectoria. La
-longitud de la más corta se denomia la~\index{distancia}distancia $d(u, v)$ de
-los vértices, o infinito si no existe ninguna trayectoria.
+Una $uv$-trayectoria es una subgráfica que sea trayectoria, que inicie en $u$ y
+que termine en $v$. Es claro que entre un par de vértices puede haber más de una
+trayectoria. La longitud de la más corta se denomia la \iem{distancia} $d(u, v)$
+de los vértices, que es infinito si no existe ninguna trayectoria. Un problema
+básico en gráfica es que dada una gráfica $G$ y dos de sus vértices $u, v$,
+encontrar su distancia.
 
-Un problema básico en gráfica es que dada una gráfica $G$ y dos de sus vértices
-$u, v$, encontrar su distancia. En su forma más simple, esto se puede hacer
-iniciando en $u$ y revisando todos los vértices a distancia 1, que serían sus
-vecinos. Si no se encuentra $v$ entonces habría que revisar a los vértices a
-distancia 2, que sería los vecinos de los vecinos que no hayan sido revisados
-ya. Esto se realiza sucesivamente hasta encontrar a $v$ o hasta que no haya más
-vértices por revisar.
+\subsection{Sin pesos}
 
-Este tipo de acciones se conocen como búsquedas, pues se busca un vértice que
-cumpla algo, en este caso que sea $v$. En particular, una búsqueda donde se
-revisan todos los vértices a una distancia dada antes de avanzar se conoce como
-una~\index{BFS}búsqueda en amplitud, o BFS por sus siglas en inglés.
+En su forma más simple, se puede considerar que todas las aristas representan
+la misma distancia. Entonces, lo que se busca es la trayectoria con menos
+aristas.
+
+Esto se puede hacer iniciando en $u$ y revisando todos los vértices vecinos, que
+serían los vértices a nivel uno. Luego, se revisan a los vértices en el nivel 2,
+que serían los vecinos de los vecinos que no hayan sido revisados ya. Esto se
+realiza sucesivamente hasta que no haya más vértices por revisar. Al final, el
+nivel de $v$ corresponde a su distancia desde $u$. Esto no es tan obvio y se
+justificará formalmente más adelante.
+
+Este tipo de acciones se conocen como búsquedas, pues se busca cierta propiedad
+de los vértices, en este caso el nivel de $v$. En particular, una búsqueda donde
+se revisan todos los vértices a una nivel dado antes de avanzar se conoce como
+una \iem{búsqueda en amplitud}, o BFS por sus siglas en inglés.
 
 Para decidir el siguiente vértice a revisar se requiere algún tipo sala de
 espera, donde se guarden los vértices vecinos al vértice actual que deberán ser
-visitados eventualmente. Para garantizar que se visiten a todos los vértices a
-distancia $k$ antes de visitar alguno a distancia $k+1$, basta notar que todo
-vértice a distancia $k+1$ es adyacente a un vértice a distancia $k$. Así que
-basta con respetar el orden de exploración. Es decir, revisar siempre el vértice
-que lleva más tiempo en la sala de espera.
+visitados eventualmente. Inductivamente, si se procesan los vértices en orden de
+exploración, entonces todos los vértices del nivel $k$ estarían en la sala de
+espera antes de que siquiera se explore alguno del nivel $k+1$.
 
-Esta estrucutura se conoce como una cola, y tiene dos operaciones. $push$
-que añade un elemento al final de la cola y $pop$ que saca el primer
-elemento de la cola. Los detalles están en el algoritmo \ref{alg:bfs}.
+Una estrucutura que respete el orden de llegada, FIFO por sus siglas en inglés,
+se conoce como una \iem{cola}, y tiene dos operaciones. $push$ que añade un
+elemento al final de la cola y $pop$ que saca el primer elemento, el más antigüo
+, de la cola.
+
+Los detalles del proceso están dscritos en el algoritmo \ref{alg:bfs}.
 
 \begin{algorithm}
-  \caption{Distancia usando BFS}
+  \caption{Distancias usando búsqueda en amplitud(BFS)}
   \label{alg:bfs}
   \begin{algorithmic}[1]
-    \Require{$G$ gráfica, $u, v \in V(G)$}
-    \Ensure{Encontrar $d_{G}(u, v)$}
+    \Require{$G$ gráfica, $r$ vértice}
+    \Ensure{Función de nivel $l$}
     \State{$Q \gets$ []}
-    \State{$i \gets$ 0}
-    \State{$push(Q, u)$}
-    \Statex
+    \State{$push(Q, r)$}
+    \State{$l(r) = 0$}
     \While{$Q \ne$ []}
     \State{$x \gets pop(Q)$}
     \For{$v_{x} \in N(x)$}
-    \If{$x = v$}
-    \State \Call{Return}{$i$}
-    \EndIf
-    \Statex
     \If{$v_{x}$ no ha sido visitado}
+    \State{$l(v_{x}) = l(x) + 1$}
     \State{marcar $v_{x}$ como visitado}
     \State{$push(Q, v_{x})$}
     \EndIf
-    \Statex
-    \State{$i \gets i + 1$}
     \EndFor
     \EndWhile
-    \Statex
-    \State \Call{Return}{$\infty$}
+    \State \Call{Return}{$l$}
   \end{algorithmic}
 \end{algorithm}
 
 \begin{proposition}
-  El algoritmo \ref{alg:bfs} devuelve la distancia entre dos vértices.
+  Sea $l$ la función de nivel regresada por el algoritmo \ref{alg:bfs}. Se
+  cumple que si $u$ y $v$ son adyacentes en $G$, entonces pertenecen o al mismo
+  nivel o a niveles sucesivos. Es decir, para toda arista $uv$
+
+  \[
+    |l(u) - l(v)| \leq 1
+  \]
 \end{proposition}
+
+\begin{proof}
+
+\end{proof}
+
+\begin{theorem}
+  La función de nivel $l(v)$ devuelta por el algoritmo \ref{alg:bfs} corresponde
+  a la distancia entre $r$ y $v$. Es decir, para todo vértice $v$, $l(v) =
+  d(r, v)$.
+\end{theorem}
 
 \begin{proof}
   Sea
 \end{proof}
 
+Ahora, que pasaría si la distancia que representa cada arista no fuera uniforme.
+En este caso, el algoritmo BFS no necesariamente daría la trayectoria más corta.
+Este tipo de gráficas se llaman gráficas con pesos.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Algoritmo de Dijkstra}
+\subsection{Con pesos}
 
-\subsection{Algoritmo de Bellman-Ford}
+Para extender la definición de \cite{Diestel2017}, se usarán conceptos de
+\cite{Bondy2008}. Se define a una gráfica con pesos como una tupla $\tpl{G, w}$
+donde $G$ es una gráfica y $w$ es una función que asigna pesos a las aristas
+$w: E \to \mathbb{R}$. Por ahora, digamos que los pesos son positivos.
 
-\section{Ciclos hamiltoneanos}
+\begin{algorithm}
+  \caption{Distancia con pesos usando el algoritmo de Dijkstra}
+  \label{alg:dijkstra}
+  \begin{algorithmic}[1]
+    \Require{$G$ gráfica, $r$ vértice raíz}
+    \Ensure{Función de distancia $l(v) = d_{G}(r, v)$}
+  \end{algorithmic}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Con pesos negativos}
 
-\subsection{Algoritmos genéticos}
-
-\subsection{Enjambre de partículas}
-
-\subsection{Colonia de hormigas}
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Flujos}
 
 \subsection{Método de Ford-Fulkerson}
 
-\section{Conjuntos independientes}
+\section{$\mathcal{NP}$-Completez}
 
-\section{Clanes}
+\subsection{Ejemplos de problemas}
+
+\subsubsection{Trayectorias hamiltoneánas}
+
+\subsubsection{Clanes}
+
+\subsubsection{Conjuntos independientes}
+
+\subsection{Métodos evolutivos}
+
+\subsubsection{Algoritmos genéticos}
+
+\subsubsection{Enjambre de partículas}
+
+\subsubsection{Colonia de hormigas}
 
 \section{Resumen}
