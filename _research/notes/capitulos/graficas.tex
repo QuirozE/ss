@@ -94,56 +94,77 @@ espera antes de que siquiera se explore alguno del nivel $k+1$.
 Una estrucutura que respete el orden de llegada, FIFO por sus siglas en inglés,
 se conoce como una \iem{cola}, y tiene dos operaciones. $push$ que añade un
 elemento al final de la cola y $pop$ que saca el primer elemento, el más antigüo
-, de la cola.
-
-Los detalles del proceso están dscritos en el algoritmo \ref{alg:bfs}.
+, de la cola. Los detalles del proceso están descritos en el \cref{alg:bfs}.
 
 \begin{algorithm}
-  \caption{Distancias usando búsqueda en amplitud(BFS)}
+  \caption[BFS]{Distancias usando búsqueda en amplitud(BFS)}
   \label{alg:bfs}
   \begin{algorithmic}[1]
     \Require{$G$ gráfica, $r$ vértice}
     \Ensure{Función de nivel $l$}
-    \State{$Q \gets$ []}
-    \State{$push(Q, r)$}
-    \State{$l(r) = 0$}
-    \While{$Q \ne$ []}
-    \State{$x \gets pop(Q)$}
-    \For{$v_{x} \in N(x)$}
-    \If{$v_{x}$ no ha sido visitado}
-    \State{$l(v_{x}) = l(x) + 1$}
-    \State{marcar $v_{x}$ como visitado}
-    \State{$push(Q, v_{x})$}
-    \EndIf
-    \EndFor
-    \EndWhile
-    \State \Call{Return}{$l$}
+    \Function{bfs}{$G$, $r$}
+      \State{$Q \gets$ []}
+      \State \Call{push}{$Q$, $r$}
+      \State{$l(r) = 0$}
+      \While{$Q \ne$ []}
+        \State{$x \gets$} \Call{pop}{$Q$}
+        \ForAll{$v_{x} \in N(x)$}
+          \If{$v_{x}$ no ha sido visitado} \label{alg:bfs:visit}
+            \State{$l(v_{x}) = l(x) + 1$} \label{alg:bfs:level}
+            \State{marcar $v_{x}$ como visitado}
+            \State \Call{push}{$Q$, $v_{x}$}
+          \EndIf
+        \EndFor
+      \EndWhile
+      \Return{$l$}
+    \EndFunction
   \end{algorithmic}
 \end{algorithm}
 
-\begin{proposition}
-  Sea $l$ la función de nivel regresada por el algoritmo \ref{alg:bfs}. Se
-  cumple que si $u$ y $v$ son adyacentes en $G$, entonces pertenecen o al mismo
-  nivel o a niveles sucesivos. Es decir, para toda arista $uv$
-
-  \[
-    |l(u) - l(v)| \leq 1
-  \]
-\end{proposition}
-
-\begin{proof}
-
-\end{proof}
+Intuitivamente, si un vértice $v$ está a distancia $k$ de $r$, existe una
+$rv$-trayectoria $p = (x_{0} = r, x_{1}, \dots, x_{k} = v)$ de logitud $k$. El
+nivel de $r$ es cero. Luego, el nivel de $x_{1}$ es a lo más 1, pues es
+adyacente a $r$. Y no puede ser cero, pues entonces existiría una
+$rv$-trayectoria más corta, así que $l(x_{1}) = 1 = d(r, x_{1})$. Este argumento
+se puede usar inductivamente para todos los vértices de $p$, y concluir que
+$l(x_{i}) = i = d(r, x_{i})$, y en particular $l(v) = k = d(r, v)$. Formalmente,
+esto se enuncia en el \cref{theo:bfs}.
 
 \begin{theorem}
-  La función de nivel $l(v)$ devuelta por el algoritmo \ref{alg:bfs} corresponde
-  a la distancia entre $r$ y $v$. Es decir, para todo vértice $v$, $l(v) =
-  d(r, v)$.
+  \label{theo:bfs}
+  La función de nivel $l(v)$ devuelta por el \cref{alg:bfs} corresponde a la
+  distancia entre $r$ y $v$. Es decir, para todo vértice $v$, $l(v) = d(r, v)$.
 \end{theorem}
 
 \begin{proof}
-  Sea
-\end{proof}
+  Sea $l(v) = bfs(G, r)$ la función de nivel y $v$ un vértice de $G$. Cada
+  vértice en nivel $k + 1$ es adyacente a un vértice en el nivel $k$, por lo que
+  para cualquier vértice, se puede construir una $rv$-trayectoria de longitud
+  $l(v)$ siguiendo estas adyacencias, así que $l(v) \ge  d(r, v)$.
+
+  Para la otra desiguladad, se prosigue por inducción sobre $d(r, v)$. Con
+  $d(r, v) = 0$, $v$ es $r$ y $l(r) = 0$. Para $d(r, v) > 0$, sea $(x_{0} = r,
+  \dots, x_{k} = v)$ una $rv$-trayectoria de longitud mínima. Por hipótesis de
+  inducción, $d(r, x_{k-1}) \ge l(x_{k-1})$. Luego, como $x_{k-1}$ y $v$ son
+  adyacentes, por la \cref{alg:bfs:visit}, hay dos posibilidades para $l(v)$.
+  Primero, puede ser que $v$ ya haya sido visitado. Como las visitas se hacen
+  por niveles, entonces el nivel del padre de $v$ es a lo más el nivel actual
+  $l(x_{k-1})$. Así
+
+  \[
+    l(v) \le l(x_{k-1}) + 1 \le d(r, x_{k-1}) + 1 = d(r, v)
+  \]
+
+  En otro caso, $v$ no ha sido visita, así que por la \cref{alg:bfs:level} se
+  tiene que
+
+  \[
+    l(v) = l(x_{k-1}) + 1 \le d(r, x_{k-1}) + 1 = d(r, v)
+  \]
+
+  En cualquier caso, se tiene que $l(v) \le d(r, v)$. Y como se tiene la
+  desigualdad opuesta, se puede concluir que $l(v) = d(r, v)$.
+  \end{proof}
 
 Ahora, que pasaría si la distancia que representa cada arista no fuera uniforme.
 En este caso, el algoritmo BFS no necesariamente daría la trayectoria más corta.
@@ -158,7 +179,9 @@ donde $G$ es una gráfica y $w$ es una función que asigna pesos a las aristas
 $w: E \to \mathbb{R}$. Por ahora, digamos que los pesos son positivos.
 
 \begin{algorithm}
-  \caption{Distancia con pesos usando el algoritmo de Dijkstra}
+  \caption[Dijsktra]{
+    Distancia con pesos usando el algoritmo de Dijkstra
+  }
   \label{alg:dijkstra}
   \begin{algorithmic}[1]
     \Require{$G$ gráfica, $r$ vértice raíz}
