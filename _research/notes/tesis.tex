@@ -14,7 +14,7 @@
 \usepackage{arev}
 
 % used to include images
-%\usepackage{graphicx}
+% \usepackage{graphicx}
 
 % extra math notation
 \usepackage{amsmath}
@@ -30,7 +30,7 @@
 \usepackage{hyperref}
 
 % context aware references
-%\usepackage{cleveref}
+\usepackage[spanish]{cleveref}
 
 % generate an index of technical terms
 \usepackage{imakeidx}
@@ -46,6 +46,9 @@
 
 % This overrides some formatting options
 \input{utils/format}
+
+% Algorithmicx doesn't support spanish, so the translations are manually made
+\input{utils/algoritmos}
 
 %-------- Document type and used packages End ------------------
 %---------------------------------------------------------------
@@ -75,6 +78,7 @@
 \tableofcontents
 \listoffigures
 \listoftables
+\listofalgorithms
 
 \include{includes/resumen} 
 \cleardoublepage
