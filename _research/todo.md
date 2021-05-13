@@ -5,9 +5,10 @@ Todos
 ## `CUDA C`
 
 - [x] Read chapter 1 and 2 from *Cuda by example*
-- [ ] Setup `SSH` connection and install the tools on the server
-- [ ] Run *Cuda by Example* basic scripts 
+- [x] Setup `SSH` connection and install the tools on the server
+- [x] Run *Cuda by Example* basic scripts
 - [ ] Read chapter 3 and recreate vector sum code
+- [ ] Review documentation for `CUDA.jl`
 
 ## Julia
 
@@ -28,4 +29,6 @@ Todos
 - [ ] Finish *BFS* correctness proof
 - [ ] Write notes for Djikstra's algorithm
 - [ ] Write notes for Bellman-Ford's algorithm
+- [ ] Make conceptual diagram for the general solution for shortest path
+  algorithms
 - [ ] Write and introduction to game theory
