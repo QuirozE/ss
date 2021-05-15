@@ -14,10 +14,11 @@
 
 /* Vector parallel sum */
 __global__ void v_sum(int *a, int *b, int *c) {
-    int tid = blockIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int offset = blockDim.x * gridDim.x;
 
-    if (tid < N) {
-        c[tid] = a[tid] + b[tid];
+    for (int i = idx; i < N; i+= offset) {
+        c[i] = a[i] + b[i];
     }
 }
 
@@ -37,7 +38,10 @@ int main(void) {
     cu_cpy_v_to_dev(dev_a, a);
     cu_cpy_v_to_dev(dev_b, b);
 
-    v_sum<<<N, 1>>>(dev_a, dev_b, dev_c);
+    int threads = 64;
+    int blocks = (N + threads - 1) / threads;
+
+    v_sum<<<blocks, threads>>>(dev_a, dev_b, dev_c);
 
     cu_cpy_v_to_host(c, dev_c);
 
