@@ -34,12 +34,12 @@ int main(void) {
         b[i] = i * i;
     }
 
-    print_error(cu_malloc_v(dev_a));
-    print_error(cu_malloc_v(dev_b));
-    print_error(cu_malloc_v(dev_c));
+    cu_malloc_v(dev_a);
+    cu_malloc_v(dev_b);
+    cu_malloc_v(dev_c);
 
-    print_error(cu_cpy_v_to_dev(dev_a, a));
-    print_error(cu_cpy_v_to_dev(dev_b, b));
+    cu_cpy_v_to_dev(dev_a, a);
+    cu_cpy_v_to_dev(dev_b, b);
 
     int threads = 256;
     int blocks = (N + threads - 1) / threads;
