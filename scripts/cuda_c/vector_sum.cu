@@ -23,7 +23,10 @@ __global__ void v_sum(int *a, int *b, int *c) {
 }
 
 int main(void) {
-    int a[N], b[N], c[N];
+    int *a = (int*) malloc(sizeof(int)*N),
+        *b = (int*) malloc(sizeof(int)*N),
+        *c = (int*) malloc(sizeof(int)*N);
+
     int *dev_a, *dev_b, *dev_c;
 
     for(int i = 0; i< N; i++) {
@@ -52,6 +55,10 @@ int main(void) {
     for(int i = 0; i < N; i++) {
         printf("%d + %d = %d\n", a[i], b[i], c[i]);
     }
+
+    free(a);
+    free(b);
+    free(c);
 
     return 0;
 }
