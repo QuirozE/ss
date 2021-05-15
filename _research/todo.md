@@ -6,8 +6,10 @@ Todos
 
 - [x] Read chapter 1 and 2 from *Cuda by example*
 - [x] Setup `SSH` connection and install the tools on the server
-- [x] Run *Cuda by Example* basic scripts
-- [ ] Read chapter 3 and recreate vector sum code
+- [x] Read chapter 3 and run *Cuda by Example* basic scripts
+- [ ] Read chapter 4
+- [ ] Recreate vector sum code
+- [ ] Recreate julia sets
 - [ ] Review documentation for `CUDA.jl`
 
 ## Julia
