@@ -26,7 +26,7 @@ Todos
 
 ## Optimization problems
 
-- [ ] Finish *BFS* correctness proof
+- [x] Finish *BFS* correctness proof
 - [ ] Write notes for Djikstra's algorithm
 - [ ] Write notes for Bellman-Ford's algorithm
 - [ ] Make conceptual diagram for the general solution for shortest path
