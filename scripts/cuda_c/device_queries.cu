@@ -1,12 +1,12 @@
 #include <stdio.h>
 
-char* banner =
+char banner[] =
     "┌──────────────────────────────────────────────────────────────┐\n"
     "│ ___ ___ __  __    _    ____             ____ ____  _   _     │\n"
-    "│|_ _|_ _|  \/  |  / \  / ___|           / ___|  _ \| | | |___ │\n"
-    "│ | | | || |\/| | / _ \ \___ \   _____  | |  _| |_) | | | / __|│\n"
-    "│ | | | || |  | |/ ___ \ ___) | |_____| | |_| |  __/| |_| \__ \│\n"
-    "│|___|___|_|  |_/_/   \_\____/           \____|_|    \___/|___/│\n"
+    "│|_ _|_ _|  \\/  |  / \\  / ___|           / ___|  _ \\| | | |___ │\n"
+    "│ | | | || |\\/| | / _ \\ \\___ \\   _____  | |  _| |_) | | | / __|│\n"
+    "│ | | | || |  | |/ ___ \\ ___) | |_____| | |_| |  __/| |_| \\__ \\│\n"
+    "│|___|___|_|  |_/_/   \\_\\____/           \\____|_|    \\___/|___/│\n"
     "│                                                              │\n"
     "└──────────────────────────────────────────────────────────────┘\n";
 
@@ -17,7 +17,12 @@ int main(void) {
     /* Get how many devices are available*/
     int dev_count;
     cudaGetDeviceCount(&dev_count);
-    printf("There are %d GPUs available\n\n", dev_count);
+
+    if(dev_count == 1) {
+    	printf("There is 1 GPU available\n\n");
+    } else {
+    	printf("There are %d GPUs available\n\n", dev_count);
+    }
 
     /* Get devices properties */
     cudaDeviceProp *device;
@@ -95,6 +100,7 @@ int main(void) {
             device->maxGridSize[1],
             device->maxGridSize[2]
         );
+	printf("\n");
     }
     return 0;
 }
