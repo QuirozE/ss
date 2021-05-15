@@ -1,6 +1,19 @@
 #include <stdio.h>
 
+char* banner =
+    "┌──────────────────────────────────────────────────────────────┐\n"
+    "│ ___ ___ __  __    _    ____             ____ ____  _   _     │\n"
+    "│|_ _|_ _|  \/  |  / \  / ___|           / ___|  _ \| | | |___ │\n"
+    "│ | | | || |\/| | / _ \ \___ \   _____  | |  _| |_) | | | / __|│\n"
+    "│ | | | || |  | |/ ___ \ ___) | |_____| | |_| |  __/| |_| \__ \│\n"
+    "│|___|___|_|  |_/_/   \_\____/           \____|_|    \___/|___/│\n"
+    "│                                                              │\n"
+    "└──────────────────────────────────────────────────────────────┘\n";
+
 int main(void) {
+
+    printf("%s", banner);
+
     /* Get how many devices are available*/
     int dev_count;
     cudaGetDeviceCount(&dev_count);
@@ -21,17 +34,17 @@ int main(void) {
             printf("No\n");
         }
         printf("\t Mode: ");
-	switch(device->computeMode) {
-	    case 0:
+        switch(device->computeMode) {
+            case 0:
                 printf("Default\n");
-		break;
-	    case 1:
-		printf("Exclusive\n");
-		break;
-	    case 2:
-		printf("Prohibited\n");
-		break;
-	}
+                break;
+            case 1:
+                printf("Exclusive\n");
+                break;
+            case 2:
+                printf("Prohibited\n");
+                break;
+        }
         printf("\t Clock rate: %d\n", device->clockRate);
         printf("\t Copy overlap: ");
         if(device->deviceOverlap) {
