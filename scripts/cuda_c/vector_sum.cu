@@ -1,16 +1,16 @@
 #include <stdio.h>
 
-#define N 50 /* Vector size */
+#define N 1000000 /* Vector size */
 
 /* Some macros to make CUDA memory manipulation less verbose */
 #define cu_malloc_v(v) cudaMalloc((void**)&v, sizeof(int) * N)
 #define cu_cpy_v(in, out, mode) cudaMemcpy(in, out, sizeof(int) * N, mode)
-#define cu_cpy_v_to_dev(dev, host) {\
-    cu_cpy_v(dev, host, cudaMemcpyHostToDevice);\
-}
-#define cu_cpy_v_to_host(host, dev) {\
-    cu_cpy_v(host, dev, cudaMemcpyDeviceToHost);\
-}
+#define cu_cpy_v_to_dev(dev, host) cu_cpy_v(\
+        dev, host, cudaMemcpyHostToDevice)
+#define cu_cpy_v_to_host(host, dev) cu_cpy_v(\
+        host, dev, cudaMemcpyDeviceToHost)
+
+#define print_error(err) printf("%s\n", cudaGetErrorString(err))
 
 /* Vector parallel sum */
 __global__ void v_sum(int *a, int *b, int *c) {
@@ -31,14 +31,14 @@ int main(void) {
         b[i] = i * i;
     }
 
-    cu_malloc_v(dev_a);
-    cu_malloc_v(dev_b);
-    cu_malloc_v(dev_c);
+    print_error(cu_malloc_v(dev_a));
+    print_error(cu_malloc_v(dev_b));
+    print_error(cu_malloc_v(dev_c));
 
-    cu_cpy_v_to_dev(dev_a, a);
-    cu_cpy_v_to_dev(dev_b, b);
+    print_error(cu_cpy_v_to_dev(dev_a, a));
+    print_error(cu_cpy_v_to_dev(dev_b, b));
 
-    int threads = 64;
+    int threads = 256;
     int blocks = (N + threads - 1) / threads;
 
     v_sum<<<blocks, threads>>>(dev_a, dev_b, dev_c);
