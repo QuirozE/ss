@@ -12,7 +12,7 @@ int main(void) {
         cudaGetDeviceProperties(device, i);
         printf("Device %d\n", i);
         printf("General information\n");
-        printf("\t Name: %s/n", device->name);
+        printf("\t Name: %s\n", device->name);
         printf("\t Capability: %d.%d\n", device->major, device->minor);
         printf("\t Integrated: ");
         if(device->integrated) {
@@ -20,8 +20,19 @@ int main(void) {
         } else {
             printf("No\n");
         }
-        printf("\t Mode: %d", device->computeMode);
-        printf("\t Clock rate: %d\n", device.clockRate);
+        printf("\t Mode: ");
+	switch(device->computeMode) {
+	    case 0:
+                printf("Default\n");
+		break;
+	    case 1:
+		printf("Exclusive\n");
+		break;
+	    case 2:
+		printf("Prohibited\n");
+		break;
+	}
+        printf("\t Clock rate: %d\n", device->clockRate);
         printf("\t Copy overlap: ");
         if(device->deviceOverlap) {
             printf("Enabled\n");
@@ -32,20 +43,20 @@ int main(void) {
         if(device->kernelExecTimeoutEnabled) {
             printf("Enabled\n");
         } else {
-            prinft("Disabled\n");
+            printf("Disabled\n");
         }
 
         printf("Memory information\n");
-        printf("Map host to memory: ");
+        printf("\t Map host to memory: ");
         if(device->canMapHostMemory) {
             printf("Yes\n");
         } else {
-            printg("No\n");
+            printf("No\n");
         }
-        printf("\t Global memory: %ld\n", device->totalGlobalMemory);
-        printf("\t Global constant: %ld\n", device->totalConstMemory);
+        printf("\t Global memory: %ld\n", device->totalGlobalMem);
+        printf("\t Global constant: %ld\n", device->totalConstMem);
         printf("\t Max mem pitch: %ld\n", device->memPitch);
-        printf("\t Texture alignment: %ld\n", device->textureAlignement);
+        printf("\t Texture alignment: %ld\n", device->textureAlignment);
 
         printf("Multiprocessing information\n");
         printf("\t Multiprocessor count: %d\n", device->multiProcessorCount);
@@ -61,9 +72,9 @@ int main(void) {
         printf("\t Max threads per block: %d\n", device->maxThreadsPerBlock);
         printf(
             "\t Max thread dimentions: %d x %d x %d\n",
-            device->maxThreadsDims[0],
-            device->maxThreadsDims[1],
-            device->maxThreadsDims[2]
+            device->maxThreadsDim[0],
+            device->maxThreadsDim[1],
+            device->maxThreadsDim[2]
         );
         printf(
             "\t Max grid dimentions: %d x %d x %d\n",
