@@ -39,23 +39,41 @@ __device__ int is_in_julia(const CuCmplx &p) {
   return 1;
 }
 
-__global__ void kernel(double *space) {
+__global__ void kernel(int *space) {
   int tid_x = blockIdx.x, tid_y = blockIdx.y,
       offset = tid_x + tid_y * gridDim.x;
   CuCmplx point(scale(tid_x), scale(tid_y));
   space[offset] = is_in_julia(point);
 }
 
+double scale_host(int x) { return scale_const * (x - X / 2) / X; }
+
+void save_space(const int (&space)[X][X], const string &filename) {
+  ofstream file(filename);
+  file << "x,y" << endl;
+  for (int i = 0; i < X; i++) {
+    for (int j = 0; j < X; j++) {
+      if (space[i][j]) {
+        double x = scale_host(i), y = scale_host(j);
+        file << x << "," << y << endl;
+      }
+    }
+  }
+  file.close();
+}
+
 int main(void) {
-  double *dev_space, space[X][X];
-  cudaMalloc((void **)&dev_space, sizeof(double) * X * X);
+  int *dev_space, space[X][X];
+  cudaMalloc((void **)&dev_space, sizeof(int) * X * X);
 
   dim3 grid(X, X);
 
   kernel<<<grid, 1>>>(dev_space);
 
-  cudaMemcpy(space, dev_space, sizeof(double) * X * X, cudaMemcpyDeviceToHost);
+  cudaMemcpy(space, dev_space, sizeof(int) * X * X, cudaMemcpyDeviceToHost);
 
   cudaFree(dev_space);
+
+  save_space(space, "julia_set_X=10000_s=1.5_cu.csv");
   return 0;
 }
