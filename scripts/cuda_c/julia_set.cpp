@@ -1,7 +1,10 @@
 #include <fstream>
 #include <iostream>
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::ofstream;
+using std::string;
 
 struct Cmplx {
   double r;
