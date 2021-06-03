@@ -2,6 +2,12 @@ using CUDA
 
 function hello()
     @cuprintln("($(threadIdx().x), $(blockIdx().x)) Hello from CUDA.jl!!!")
+    return
 end
 
-@cuda hello()
+function main()
+    @cuda hello()
+    return
+end
+
+main()
