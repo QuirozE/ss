@@ -7,10 +7,15 @@ Todos
 - [x] Read chapter 1 and 2 from *Cuda by example*
 - [x] Setup `SSH` connection and install the tools on the server
 - [x] Read chapter 3 and run *Cuda by Example* basic scripts
-- [ ] Read chapter 4
-- [ ] Recreate vector sum code
-- [ ] Recreate julia sets
-- [ ] Review documentation for `CUDA.jl`
+- [x] Read chapter 4
+  - [x] Recreate vector sum code
+  - [x] Recreate julia sets
+- [x] Read chapter 5
+  - [ ] Recreate shared dot product
+- [ ] Read chapter 6
+  - [ ] Recreate simple ray tracing
+- [ ] Add `Magick` or some image library to do real rendering.
+- [x] Review documentation for `CUDA.jl`
 
 ## Julia
 
@@ -18,13 +23,14 @@ Todos
 - [x] Create notebook with examples of the type system
 - [ ] Recreate [Nassar](https://youtu.be/S5R8zXJOsUQ)'s optimization tips
 - [ ] Recreate [Bauman](https://juliaacademy.com/p/parallel-computing)'s code
-	for SIMD optimization
+  for SIMD optimization
 
 ## Parallel computing
 
 - [x] Finish reading Pancake's paper
-- [ ] Finish chapter 2 from Pacheco's book
-- [ ] Writes an introduction to the different types of parallel computing
+- [x] Finish chapter 2 from Pacheco's book
+- [x] Writes an introduction to the different types of parallel computing
+- [ ] Write more in depth notes for a MDMI GPUs architecture
 
 ## Optimization problems
 
@@ -34,3 +40,7 @@ Todos
 - [ ] Make conceptual diagram for the general solution for shortest path
   algorithms
 - [ ] Write and introduction to game theory
+- [ ] Write notes for PSO
+  - [ ] Read Yang's chapter on the subject
+  - [x] Create toy implementation
+  - [x] Make notes
