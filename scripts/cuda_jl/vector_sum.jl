@@ -12,6 +12,7 @@ function cu_add(x, y)
     for i in index:offset:length(x)
         @inbounds x[i] += y[i]
     end
+    return nothing
 end
 
 
