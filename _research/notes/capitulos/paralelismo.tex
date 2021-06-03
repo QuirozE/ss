@@ -1,35 +1,68 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Paralelismo}
 
-\section{Motivación}
+Gran cantidad de problemas como simulación del clima, análisis de genómas,
+investigación en nuevas energía o aprendizaje de máquina \cite{Pacheco2011}
+requieren gran poder computacional para ser resueltos. Por lo que mayor poder
+de cómputo disponible aumenta la cantidad de problemas tratables. En el pasado,
+esto se lograba aumentando la velocidad y densidad de transistores en los
+procesadores. Sin embargo, esta técnica está llegando a un límite físico.
+
+Así que en los últimos años, para obtener un aumento en el rendimiento se usan
+sistemas paralelos. Estos pueden variar desde un procesador con varios núcleos
+hasta redes de computadores. El tener varias unidades de cómputo permite obtener
+mejoras de rendimiento a pesar de no tener procesadores más veloces.
+
+Pero hacerlo introduce problemas concernientes a la coordinación de todas las
+partes. Los detalles del problema y las diferentes técnicas y herramientas para
+lidiar con ellos dependen bastante de la infraestructura particular.
+
+Más aún, cierta infraestrucutura o técnica pueden ser más conveniente de usar
+para ciertos tipos de problemas. En este capítulo se van a explorar diferentes
+clasificaiones de arquitecturas paralelas y sus peculiaridades, además de dar
+algunos criterios para clasificar los problemas y decidir la mejor manera de
+crear una solución paralela a un problema en particular.
 
 \section{Tipos de arquitectura}
 
 Tradicionalmente se dividen los tipos de sistemas en base a como tratan el flujo
-de datos y de instrucciones. Esto se conoce como taxonomía de Flynn
-\cite{Pacheco2011}. Están las siguientes  categorías
+de datos y de instrucciones. Esto se conoce como taxonomía de Flynn. Están las
+siguientes  categorías
 
 \begin{itemize}
-    \item \textit{SISD}\index{SISD} (Single Instruction Single Data): sistemas
+  \item \textit{SISD}\index{SISD} (Single Instruction Single Data): sistemas
     sin paralelismo.
-    
-    \item \textit{SIMD}\index{SIMD} (Single Instruction Multiple Data):
+
+  \item \textit{SIMD}\index{SIMD} (Single Instruction Multiple Data):
     sistemas que pueden aplicar una operación a vectores o arreglos de datos en
-    una unidad de tiempo.
-    
-    \item \textit{MIMD}\index{MIMD} (Multiple Data Multiple Instructions):
+    una unidad de tiempo
+
+  \item \textit{MIMD}\index{MIMD} (Multiple Data Multiple Instructions):
     sistemas donde cada unidad de procesamiento es independiente.
 \end{itemize}
 
 \subsection{Sistemas \textit{SISD}}
 
-\index{ILP}
-\index{pipelining}
+Contrario a su nombres, estos modelos pueden tener ciertos mecanismos
+paralaelos. Estos son optimizaciones a nivel de hardware que permiten ejecutar
+instrucciones de forma no secuencial \index{ILP}. Esto no se considera
+paralelismo en la taxonomía de Flynn ya que estos mecanismos no están
+disponibles para los desarrolladores. Aún así, vale la pena revisar algunos.
+
+\begin{itemize}
+  \item \emph{Pipelining}\index{pipelining}:
+        Consiste en partir una instrucción en pasos atómicos. Esto es sacar los
+        datos de memoria, revisar el tipo de operación, aplicar la operación,
+        guardar los datos resultantes, entre otros. Cada sección se le asigna a
+        diferentes secciones de la unidad de control. Entonces, cuando un
+\end{itemize}
+
 \index{multiple issue}
 
 \subsection{Sistemas \textit{SIMD}}
 
-En estos sistemas hay una única unidad de control con varias unidades aritmético lógicas (\textit{ALU}). Al recibir la instrucción, la unidad de control avisa a
+En estos sistemas hay una única unidad de control con varias unidades aritmético
+lógicas (\textit{ALU}). Al recibir la instrucción, la unidad de control avisa a
 todas las \textit{ALUs} para que apliquen la operación al dato correspondiente.
 Este tipo de paralelismo se denomina \textbf{paralelismo de datos}
 \index{paralelismo de datos}.
@@ -46,7 +79,7 @@ directo. Además, la mejora en rendimiento al usarlos suele ser aceptable.
 
 Hoy en día, cada núcleo de un \textit{CPUs} \index{CPU} cuentan con
 instrucciones que permiten este tipo de operaciones. No son un sistema
-exclusivamente \textit{SIMD}, ya que tener varios núcleos le dan 
+exclusivamente \textit{SIMD}, ya que tener varios núcleos le dan
 características \textit{MIMD}.
 
 Las unidades de procesamiento gráfico (\textit{GPU}) \index{GPU} también tienen
@@ -81,8 +114,8 @@ determinar si vale la pena dar una solución paralela a un problema.
     pena paralelizarlo si hay muy pocas interacciones entre procesos.
 
     \item Un problema de paralelismo perfecto podría implementarse en un sistema
-    \textit{MIMD}, pero sería problemático hacerlo en un sistema \textit{SIMD}.
-    
+        \textit{MIMD}, pero sería problemático hacerlo en un sistema \textit{SIMD}.
+
     \item Un problema de paralelismo de \textit{pipeline} probablemente se
     desempeñe mejor en un sistema de memoria compartida o en un SMP (siempre y
     cuando cada etapa queda en una unidad de procesamiento). Podría funcionar
