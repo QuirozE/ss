@@ -13,3 +13,20 @@ it in Julia. At these point, I am considering the following problems.
 * NP complete problems, to be solved with evolutionary techniques
 
   Particle Swarm Optimization, Ant Colony Optimization, Genetic Programming
+
+## Dependencies
+
+The whole repository is a Julia project, so to get all Julia dependencies, it is
+enough to run
+
+``` julia
+julia> cd("path/to/project")
+pkg> activate .
+pkg> instantiate
+```
+
+Other than these, to run CUDA code, the GPU drivers and the
+[Nvidia Toolkit](https://developer.nvidia.com/cuda-toolkit) must be installed.
+
+Additionally, some `C++` examples use the [Boost](https://www.boost.org/)
+library.
