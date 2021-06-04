@@ -1,3 +1,6 @@
+using DrWatson
+@quickactivate "ss"
+
 using CUDA
 using BenchmarkTools
 
