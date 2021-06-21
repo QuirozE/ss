@@ -4,18 +4,20 @@ using DrWatson
 using CUDA
 using BenchmarkTools
 
+
 function bench_cu_broadcast(x, y)
     CUDA.@sync y .+= x_d
 end
 
 function cu_add(x, y)
-    idx = (blockIdx.x - 1) * blockDim().x + threadIdx.x()
+    idx = (blockIdx().x - 1) * blockDim().x + threadIdx.x()
     offset = blockDim().x * gridDim().x
 
-    for i in index:offset:length(x)
+    for i in idx:offset:length(x)
         @inbounds x[i] += y[i]
     end
-    return nothing
+
+    return
 end
 
 
