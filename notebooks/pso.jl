@@ -11,6 +11,7 @@ using DrWatson
 begin
 	using Random
 	using Plots; plotlyjs();
+	using BenchmarkTools
 end
 
 # ╔═╡ dbdac828-ce7c-497d-a7e6-16a50e63b8ec
@@ -167,14 +168,14 @@ la función.
 # ╔═╡ d3d2f6ec-4907-4fa7-96c7-a21fd9e13f1f
 f(x; m = 10) = - sin(x[1])*(sin(x[1]^2/π)^(2*m)) - sin(x[2])*(sin(2*x[2]^2/π)^(2m))
 
+# ╔═╡ a1003d54-d733-455e-9fc2-6f9e9965e9b1
+s = Swarm(2, 5, -500:500, f)
+
 # ╔═╡ 3edce3a8-fc84-43ca-8d5f-383ec45387a8
 begin
 	xk = range(0, 4, step=0.1)
 	surface(xk, xk, (x, y) -> f([x, y]))
 end
-
-# ╔═╡ bb455ac0-c88a-4384-81a4-385f9e7db1a2
-s = Swarm(2, 5, -500:500, f)
 
 # ╔═╡ 3188e707-fc77-40cb-acbb-2ac92cd5641b
 md"""
@@ -208,18 +209,6 @@ function step!(s)
 	end
 end
 
-# ╔═╡ fe89115f-ec80-4d23-8ecb-aa7861fdba61
-begin
-	test_swarm = Swarm(2, 50, 0:4, f, α=0.1, β=0.1)
-
-	for i in 1:25
-		step!(test_swarm)
-		println(
-			"f($(test_swarm.best_pos[1]), $(test_swarm.best_pos[2]))=$(f(test_swarm.best_pos))"
-		)
-	end
-end
-
 # ╔═╡ 5f1e3197-b813-42f5-afcd-4f0285a37414
 md"""
 Usando `Plots.jl` se puede generar una visualización de las partículas durante la
@@ -228,13 +217,13 @@ optimización.
 
 # ╔═╡ 83dde1eb-2f6f-4032-bc39-2b8cefab91be
 begin
-	swarm = Swarm(2, 50, 0.4, f)
+	swarm = Swarm(2, 50, 0:4, f)
 
-	anim = @animate for i in 1:30
+	anim = @animate for i in 1:10
 		step!(swarm)
 		x = [p.pos[1] for p in swarm.particles]
 		y = [p.pos[2] for p in swarm.particles]
-		contour(-500:500, -500:500, (x, y) -> f([x, y]))
+		contour(xk, xk, (x, y) -> f([x, y]))
 		scatter!(x, y, label="")
 	end
 	
@@ -252,9 +241,27 @@ $(f(swarm.best_pos))
 begin
 	x = [p.pos[1] for p in swarm.particles]
 	y = [p.pos[2] for p in swarm.particles]
-	contour(-500:500, -500:500, (x, y) -> f([x, y]))
+	contour(xk, xk, (x, y) -> f([x, y]))
 	scatter!(x, y, label="")
 end
+
+# ╔═╡ 7be83d4d-71ec-4efc-8368-544d39ccd3e1
+md"""
+¿Y qué tan eficiente es este método? Habría que hacer un _benchmark_. Para esto, se
+tiene que colocar todo el código anterior en una función.
+"""
+
+# ╔═╡ 59672487-3d77-456c-bb67-e1865c7409be
+function pso(cost; num_particles, dims, axis, steps, α=2, β=2, seed=0)
+	swarm = Swarm(dims, num_particles, axis, cost, α=α, β=β, seed=seed)
+	for i in 1:steps
+		step!(swarm)
+	end
+	swarm.best_pos
+end
+
+# ╔═╡ 7c3c9f60-c070-4e99-8f06-72c870345413
+@benchmark pso(f, num_particles=50, dims=2, axis=xk, steps=100)
 
 # ╔═╡ e2b3dc4c-f771-4d15-9577-528b98680236
 
@@ -272,15 +279,17 @@ end
 # ╠═a11aa894-f58d-49a0-960c-c196dafebbef
 # ╟─8bfee0a5-de38-46ec-8715-c52535033d75
 # ╠═4a7d1be4-ab8a-44c2-8845-3977a2e8dcf4
+# ╠═a1003d54-d733-455e-9fc2-6f9e9965e9b1
 # ╟─b6ea2563-e197-4c60-b3f3-8dd4e31aed41
 # ╠═d3d2f6ec-4907-4fa7-96c7-a21fd9e13f1f
 # ╠═3edce3a8-fc84-43ca-8d5f-383ec45387a8
-# ╠═bb455ac0-c88a-4384-81a4-385f9e7db1a2
 # ╟─3188e707-fc77-40cb-acbb-2ac92cd5641b
 # ╠═6e26965d-d84a-4eee-aef7-f90bc8ff22f3
-# ╠═fe89115f-ec80-4d23-8ecb-aa7861fdba61
 # ╟─5f1e3197-b813-42f5-afcd-4f0285a37414
 # ╠═83dde1eb-2f6f-4032-bc39-2b8cefab91be
 # ╟─37c0d3ff-f84b-43c3-8194-e096acaa422a
 # ╠═4428ccff-ff9d-47b1-a1f9-d206b5018d0f
+# ╟─7be83d4d-71ec-4efc-8368-544d39ccd3e1
+# ╠═59672487-3d77-456c-bb67-e1865c7409be
+# ╠═7c3c9f60-c070-4e99-8f06-72c870345413
 # ╟─e2b3dc4c-f771-4d15-9577-528b98680236
