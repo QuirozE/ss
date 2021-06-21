@@ -1,0 +1,4 @@
+name = "SupplyChains"
+uuid = "e3bc571f-7f57-4fef-a4ba-7ba27610f16f"
+authors = ["Edgar Quiroz <eq24f02@pm.me>"]
+version = "0.1.0"
