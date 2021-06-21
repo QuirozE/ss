@@ -1,6 +1,6 @@
 module SupplyChains
 
-export SupplyCapacity, SupplyCost, SupplyChain, SupplySchedule,
+export SupplyCapacity, SupplyCost, SupplySchedule,
     dims, cost
 
 function check_eq(mess, e1, e2)
@@ -28,10 +28,10 @@ struct SupplyEdges
     function SupplyEdges(cost_sp, cost_pd, cost_dc)
         _, np = size(cost_sp)
         _np, nd = size(cost_pd)
-        check_eq("Incongruent unitary cost dims", np, _np)
+        check_eq("Incongruent matrices dims", np, _np)
 
         _nd, _ = size(cost_dc)
-        check_eq("Incongruent unitary cost dims", nd, _nd)
+        check_eq("Incongruent matrices dims", nd, _nd)
 
         new(cost_sp, cost_pd, cost_dc)
     end
@@ -61,35 +61,25 @@ end
 
 dims(cost::SupplyCost) = dims(cost.unitary)
 
-struct SupplyChain
-    capacity
-    cost
-
-    function SupplyChain(cap, cost)
-        check_eq("Incongruent cost-capacity dims", dims(cap), dims(cost))
-        new(cap, cost)
-    end
-end
-
-dims(chain::SupplyChain) = dims(chain.capacity)
-
 struct SupplySchedule
-    chain
+    capacities
+    costs
     max_plants
     max_distributors
     active_plants
     active_distributors
     load
 
-    function SupplySchedule(chain, mp, md, ap, ad, flow_sp, flow_pd, flow_dc)
-        flow = SupplyEdges(flow_sp, flow_pd, flow_dc)
-        new(chain, mp, md, ap, ad, flow)
+    function SupplySchedule(cap, cost, mp, md, ap, ad, flowsp, flowpd, flowdc)
+        check_eq("Incongruent cost-capacity matrices", dims(cap), dims(cost))
+        flow = SupplyEdges(flowsp, flowpd, flowdc)
+        new(cap, cost, mp, md, ap, ad, flow)
     end
 end
 
 function cost(s::SupplySchedule)
     total_active = transpose(vcat(s.active_plants, s.active_distributors))
-    fixed_cost = vcat(s.chain.cost.plants, s.chain.cost.distributors)
+    fixed_cost = vcat(s.costs.plants, s.costs.distributors)
     total_active * fixed_cost
 end
 
