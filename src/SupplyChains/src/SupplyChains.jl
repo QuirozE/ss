@@ -2,7 +2,7 @@ module SupplyChains
 
 using LinearAlgebra
 
-export SupplyCapacity, SupplyCost, SupplyChain, SupplySchedule,
+export Capacity, Flow, Cost, SupplyChain, Schedule,
     size, cost
 
 function check_eq(mess, e1, e2)
@@ -48,33 +48,41 @@ struct Flow
     end
 end
 
-function active_edges(e, active_plants, active_dists)
+function Base.:(==)(f1::Flow, f2::Flow)
+    (
+        isequal(f1.supls_plants, f2.supls_plants)
+        && isequal(f1.plants_dists, f2.plants_dists)
+        && isequal(f1.dists_clients, f2.dists_clients)
+    )
+end
+
+function active_flow(e, active_plants, active_dists)
     plants_matrix = Diagonal(active_plants)
     dists_matrix = Diagonal(active_dists)
     supl_plants_cost = e.supls_plants * plants_matrix
     plants_dist_cost = plants_matrix * e.plants_dists * dists_matrix
     dist_clients_cost = dists_matrix * e.dists_clients
-    SupplyEdges(supl_plants_cost, plants_dist_cost, dist_clients_cost)
+    Flow(supl_plants_cost, plants_dist_cost, dist_clients_cost)
 end
 
-function Base.vec(e::SupplyEdges)
+function Base.vec(e::Flow)
     sp = vec(e.supls_plants)
     pd = vec(e.plants_dists)
     dc = vec(e.dists_clients)
     vcat(sp, pd, dc)
 end
 
-function Base.size(e::SupplyEdges)
+function Base.size(e::Flow)
     (size(e.supls_plants)..., size(e.dists_clients)...)
 end
 
-struct SupplyCost
+struct Cost
     plants
     distributors
     unitary
 
-    function SupplyCost(fixed_p, fixed_d, cost_sp, cost_pd, cost_dc)
-        unitary_cost = SupplyEdges(cost_sp, cost_pd, cost_dc)
+    function Cost(fixed_p, fixed_d, cost_sp, cost_pd, cost_dc)
+        unitary_cost = Flow(cost_sp, cost_pd, cost_dc)
         d = size(unitary_cost)
         check_eq(
             "Incongruent fixed-unitary cost size",
@@ -86,7 +94,15 @@ struct SupplyCost
     end
 end
 
-Base.size(cost::SupplyCost) = size(cost.unitary)
+function Base.:(==)(c1::Cost, c2::Cost)
+    (
+        isequal(c1.plants, c2.plants)
+        && isequal(c1.distributors, c2.distributors)
+        && isequal(c1.unitary, c2.unitary)
+    )
+end
+
+Base.size(cost::Cost) = size(cost.unitary)
 
 struct SupplyChain
     capacities
@@ -98,44 +114,57 @@ struct SupplyChain
     end
 end
 
+function Base.:(==)(s1::SupplyChain, s2::SupplyChain)
+    isequal(s1.capacities, s2.capacities) && isequal(s1.costs, s2.costs)
+end
+
 Base.size(chain::SupplyChain) = size(chain.capacities)
 
-struct SupplySchedule
+struct Schedule
     chain
     max_plants
     max_distributors
     active_plants
     active_distributors
-    load
-
-    function SupplySchedule(chain, mp, md, ap, ad, load)
+    flow
+    function Schedule(chain, mp, md, ap, ad, flow)
         dims = size(chain)
-        check_eq("Incongruent flow-chain dims", dims, size(load))
+        check_eq("Incongruent flow-chain dims", dims, size(flow))
         check_eq("Incongruent number of plants", length(ap), dims[2])
         check_eq("Incongruent number of distributors", length(ap), dims[3])
-        new(chain, mp, md, ap, ad, load)
+        new(chain, mp, md, ap, ad, flow)
     end
 end
 
-function SupplySchedule(cap, cost, mp, md, ap, ad, flowsp, flowpd, flowdc)
+function Schedule(cap, cost, mp, md, ad, dp, flow)
     chain = SupplyChain(cap, cost)
-    flow = SupplyEdges(flowsp, flowpd, flowdc)
-    SupplySchedule(chain, mp, md, ap, ad, flow)
+    Schedule(chain, mp, md, ad, dp, flow)
 end
 
-function cost(s)
-    active_unit_cost = vec(active_edges(
-        s.chain.costs.unitary,
-        s.active_plants,
-        s.active_distributors
-    ))
-    active_load_cost = transpose(active_unit_cost) * vec(s.load)
-    fixed_cost = vcat(s.chain.costs.plants, s.chain.costs.distributors)
-    println(s.active_plants)
-    active_fixed_cost = transpose(fixed_cost) * vcat(
-        s.active_plants, s.active_distributors
+function Schedule(cap, cost, mp, md, ap, ad, flowsp, flowpd, flowdc)
+    flow = Flow(flowsp, flowpd, flowdc)
+    Schedule(cap, cost, mp, md, ap, ad, flow)
+end
+
+cost(s::Schedule) = cost(
+    s.chain.costs,
+    s.active_plants,
+    s.active_distributors,
+    s.flow
+)
+
+function cost(c, ap, ad, load)
+    au_cost = vec(active_flow(c.unitary, ap, ad))
+    al_cost = transpose(au_cost) * vec(load)
+    f_vec = vcat(c.plants, c.distributors)
+    f_cost = transpose(f_vec) * vcat(
+        ap, ad
     )
-    active_load_cost + active_fixed_cost
+    al_cost + f_cost
+end
+
+function is_valid(s)
+    true
 end
 
 end # module
