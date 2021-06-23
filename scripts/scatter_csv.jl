@@ -10,14 +10,14 @@ using DelimitedFiles
 using Plots; pgfplotsx()
 
 function graph_csv(filename)
-    (points, names) = readdlm(
+    (points, _) = readdlm(
         datadir("sims", filename),
         ',',
         Float64,
         header=true
     )
 
-    p = scatter(
+    scatter(
         points[:, 1], points[:, 2],
         label="",
         markersize=0.1,

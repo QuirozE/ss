@@ -11,23 +11,32 @@ function check_eq(mess, e1, e2)
     end
 end
 
-struct SupplyCapacity
-    supliers
+struct Capacity
+    suppliers
     plants
     distributors
     clients
 end
 
-function Base.size(cap::SupplyCapacity)
-    length.((cap.supliers, cap.plants, cap.distributors, cap.clients))
+function Base.:(==)(c1::Capacity, c2::Capacity)
+    (
+        isequal(c1.suppliers, c2.suppliers) &&
+        isequal(c1.plants, c2.plants) &&
+        isequal(c1.distributors, c2.distributors) &&
+        isequal(c1.clients, c2.clients)
+    )
 end
 
-struct SupplyEdges
+function Base.size(cap::Capacity)
+    length.((cap.suppliers, cap.plants, cap.distributors, cap.clients))
+end
+
+struct Flow
     supls_plants
     plants_dists
     dists_clients
 
-    function SupplyEdges(cost_sp, cost_pd, cost_dc)
+    function Flow(cost_sp, cost_pd, cost_dc)
         _, np = size(cost_sp)
         _np, nd = size(cost_pd)
         check_eq("Incongruent matrices size", np, _np)
