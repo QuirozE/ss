@@ -7,11 +7,11 @@ import SupplyChains:active_flow
         empty_cap = Capacity([0], [0], [0], [0])
         empty_cost = Cost([0], [0], z, z, z)
         empty_flow = Flow(z, z, z)
-        empty_sch = Schedule(empty_cap, empty_cost, 0, 0, [0], [0], empty_flow)
+        empty_chain = SupplyChain(empty_cap, empty_cost, 0, 0, empty_flow)
         @test empty_cap.clients == [0]
         @test empty_cost.plants == [0]
         @test empty_cost.unitary.supls_plants == z
-        @test empty_sch.max_plants == 0
+        @test empty_chain.max_plants == 0
     end
 
     dims = rand(1:10, 4)

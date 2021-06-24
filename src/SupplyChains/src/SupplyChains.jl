@@ -104,67 +104,102 @@ end
 
 Base.size(cost::Cost) = size(cost.unitary)
 
+function cost(c, ap, ad, load)
+    dims = size(c)
+    check_eq("Incongruent number of plants", length(ap), dims[2])
+    check_eq("Incongruent number of distributors", length(ad), dims[3])
+
+    au_cost = vec(active_flow(c.unitary, ap, ad))
+    al_cost = transpose(au_cost) * vec(load)
+    f_vec = [c.plants ; c.distributors]
+    f_cost = transpose(f_vec) * [ap; ad]
+    al_cost + f_cost
+end
+
 struct SupplyChain
     capacities
     costs
+    max_plants
+    max_distributors
+    flow
 
-    function SupplyChain(cap, cost)
+    function SupplyChain(cap, cost, mp, md, flow)
         check_eq("Incongruent cost-capacity matrices", size(cap), size(cost))
-        new(cap, cost)
+        check_eq("Incongruent chain-flow dims", size(flow), size(cost.unitary))
+        new(cap, cost, mp, md, flow)
     end
 end
 
+function SupplyChain(cap, cost, mp, md, flowsp, flowpd, flowdc)
+    flow = Flow(flowsp, flowpd, flowdc)
+    SupplyChain(cap, cost, mp, md, flow)
+end
+
 function Base.:(==)(s1::SupplyChain, s2::SupplyChain)
-    isequal(s1.capacities, s2.capacities) && isequal(s1.costs, s2.costs)
+    (
+        isequal(s1.capacities, s2.capacities) && isequal(s1.costs, s2.costs)
+        && isequal(s1.max_plants, s2.max_plants)
+        && isequal(s1.max_distributors, s2.max_distributors)
+        && isequal(s1.flow, s2.flow)
+    )
 end
 
 Base.size(chain::SupplyChain) = size(chain.capacities)
 
-struct Schedule
-    chain
-    max_plants
-    max_distributors
-    active_plants
-    active_distributors
-    flow
-    function Schedule(chain, mp, md, ap, ad, flow)
-        dims = size(chain)
-        check_eq("Incongruent flow-chain dims", dims, size(flow))
-        check_eq("Incongruent number of plants", length(ap), dims[2])
-        check_eq("Incongruent number of distributors", length(ap), dims[3])
-        new(chain, mp, md, ap, ad, flow)
-    end
-end
-
-function Schedule(cap, cost, mp, md, ad, dp, flow)
-    chain = SupplyChain(cap, cost)
-    Schedule(chain, mp, md, ad, dp, flow)
-end
-
-function Schedule(cap, cost, mp, md, ap, ad, flowsp, flowpd, flowdc)
-    flow = Flow(flowsp, flowpd, flowdc)
-    Schedule(cap, cost, mp, md, ap, ad, flow)
-end
-
-cost(s::Schedule) = cost(
-    s.chain.costs,
-    s.active_plants,
-    s.active_distributors,
+costs(s::SupplyChain, ap, ad) = cost(
+    s.costs,
+    ap,
+    ad,
     s.flow
 )
 
-function cost(c, ap, ad, load)
-    au_cost = vec(active_flow(c.unitary, ap, ad))
-    al_cost = transpose(au_cost) * vec(load)
-    f_vec = vcat(c.plants, c.distributors)
-    f_cost = transpose(f_vec) * vcat(
-        ap, ad
+mutable struct Schedule
+    chain
+    active_plants
+    active_distributors
+    function Schedule(c, ap, ad)
+        dims = size(chain)
+        check_eq("Incongruent number of plants", length(ap), dims[2])
+        check_eq("Incongruent number of distributors", length(ad), dims[3])
+        new(c, ap, ad)
+    end
+end
+
+cost(s::Schedule) = cost(
+    s.chain.costs, s.active_plants,
+    s.active_distributors, s.chain.load
+)
+
+function update!(s::Schedule, active_vec)
+    l = length(active_vec)
+    check_eq(
+        "Incongruent active nodes vector",
+        l,
+        length(s.active_plants) + length(s.active_distributors)
     )
-    al_cost + f_cost
+
+    p = length(s.active_plants)
+
+    s.active_plants = active_vec[1:p]
+    s.active_distributors = active_vec[p+1:l]
 end
 
 function is_valid(s)
     true
+end
+
+module PSO
+
+mutable struct Particle
+    velocity
+    pos
+    p_best
+    schedule
+end
+
+function move!()
+end
+
 end
 
 end # module
