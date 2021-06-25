@@ -2,8 +2,8 @@ module SupplyChains
 
 using LinearAlgebra
 
-export Capacity, Flow, Cost, SupplyChain, Schedule,
-    size, cost, length, split_pos, update!, length, is_valid
+export Capacity, Flow, Cost, SupplyChain,
+    size, cost, length, split_pos, is_valid
 
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
@@ -71,7 +71,7 @@ function Base.vec(e::Flow)
     sp = vec(e.supls_plants)
     pd = vec(e.plants_dists)
     dc = vec(e.dists_clients)
-    vcat(sp, pd, dc)
+    [sp; pd; dc]
 end
 
 function Base.size(e::Flow)
@@ -123,18 +123,11 @@ struct SupplyChain
     costs
     max_plants
     max_distributors
-    flow
 
-    function SupplyChain(cap, cost, mp, md, flow)
+    function SupplyChain(cap, cost, mp, md)
         check_eq("Incongruent cost-capacity matrices", size(cap), size(cost))
-        check_eq("Incongruent chain-flow dims", size(flow), size(cost.unitary))
-        new(cap, cost, mp, md, flow)
+        new(cap, cost, mp, md)
     end
-end
-
-function SupplyChain(cap, cost, mp, md, flowsp, flowpd, flowdc)
-    flow = Flow(flowsp, flowpd, flowdc)
-    SupplyChain(cap, cost, mp, md, flow)
 end
 
 function Base.:(==)(s1::SupplyChain, s2::SupplyChain)
@@ -142,32 +135,31 @@ function Base.:(==)(s1::SupplyChain, s2::SupplyChain)
         isequal(s1.capacities, s2.capacities) && isequal(s1.costs, s2.costs)
         && isequal(s1.max_plants, s2.max_plants)
         && isequal(s1.max_distributors, s2.max_distributors)
-        && isequal(s1.flow, s2.flow)
     )
 end
 
 Base.size(chain::SupplyChain) = size(chain.capacities)
 
-cost(s::SupplyChain, ap, ad) = cost(
+cost(s::SupplyChain, ap, ad, flow) = cost(
     s.costs,
     ap,
     ad,
-    s.flow
+    flow
 )
 
-function cost(s::SupplyChain, pos_vec)
+function cost(s::SupplyChain, pos_vec, flow)
     as = split_pos(s, pos_vec)
-    cost(s, as[1], as[2])
+    cost(s, as[1], as[2], flow)
 end
 
 function split_pos(s::SupplyChain, pos_vec)
     l = length(pos_vec)
     dims = size(s)
-    check_eq("Incongruent active nodes vector", l,dims[2] + dims[3])
-    (pos_vec[1:dims[2]], pos_vec[p + 1:l])
+    check_eq("Incongruent active nodes vector", l, dims[2] + dims[3])
+    (pos_vec[1:dims[2]], pos_vec[dims[2] + 1:l])
 end
 
-function is_valid(s, pos_vec)
+function is_valid(s, pos_vec, flow)
     true
 end
 
@@ -189,7 +181,7 @@ mutable struct Particle
     end
 end
 
-function move!(p::Particle, best, acc, r1, r2)
+function move!(p::Particle, best, acc, r1, r2, r3)
     check_eq(
         "Incongruent vector dimentions",
         length(p.pos), length(best),
@@ -198,12 +190,15 @@ function move!(p::Particle, best, acc, r1, r2)
     p_best_dir = p.p_acc * r1 .* (p.p_best - p.pos)
     best_dir = acc * r2 .* (best - p.pos)
     p.velocity = p.momentum * p.velocity + p_best_dir + best_dir
-    p.pos = activation.(p.pos, rand(length(p.pos)))
+    p.pos = activation.(p.velocity, r3)
 end
 
-function move!(p::Particle, best, acc)
-    move!(p, best, acc, rand(length(best)), rand(length(best)))
-end
+move!(p::Particle, best, acc) = move!(
+    p, best, acc,
+    rand(length(best)),
+    rand(length(best)),
+    rand(length(best))
+)
 
 activation(v, r) = if r < 1 / (1 + ℯ^v) 1 else 0 end
 
@@ -211,23 +206,25 @@ mutable struct Swarm
     particles
     best_pos
     best_acc
-    objective
+    obj
+    opt
 end
 
 function step!(s::Swarm)
     # Some LP optimization
+    extra = s.opt.(s.particles, s.obj)
     # End LP optimization
 
-    for p in s.particles
+    for (i, p) in enumerate(s.particles)
         move!(p, s.best_pos, s.best_acc)
 
-        if cost(p.val, p.pos) < cost(p.val, p.p_best)
+        if cost(s.obj, p.pos, extra[i]) < cost(s.obj, p.p_best, extra[i])
             p.p_best = p.pos
         end
     end
 
-    for p in s.particles
-        if cost(s.objective, p.pos) < cost(s.objective, s.best_pos)
+    for (i, p) in enumerate(s.particles)
+        if cost(s.obj, p.pos, extra[i]) < cost(s.obj, s.best_pos, extra[i])
             s.best_pos = p.pos
         end
     end

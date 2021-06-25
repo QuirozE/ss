@@ -7,7 +7,7 @@ import SupplyChains:active_flow
         empty_cap = Capacity([0], [0], [0], [0])
         empty_cost = Cost([0], [0], z, z, z)
         empty_flow = Flow(z, z, z)
-        empty_chain = SupplyChain(empty_cap, empty_cost, 0, 0, empty_flow)
+        empty_chain = SupplyChain(empty_cap, empty_cost, 0, 0)
         @test empty_cap.clients == [0]
         @test empty_cost.plants == [0]
         @test empty_cost.unitary.supls_plants == z
@@ -68,7 +68,15 @@ import SupplyChains:active_flow
 end
 
 @testset "Particle Swarm" begin
-    p = Particle([1, 1], 1, 1)
-    move!(p, [0, 0], 0, [0, 0], [0, 0])
-    @test p.pos == [1, 1]
+    @testset "Particles" begin
+        p = Particle([1, 1], 1, 1)
+        move!(p, [0, 0], 0, [0, 0], [0, 0], [0, 0])
+        @test p.pos == [1, 1]
+        move!(p, [0, 0], 0, [1, 1], [0, 0], [0, 0])
+        @test p.pos == [1, 1]
+        move!(p, [0, 0], 1, [0, 0], [1, 1], [0, 1])
+        @test p.pos == [1, 0]
+        move!(p, [0, 0], 0, [0, 0], [0, 0], [1, 1])
+        @test p.pos == [0, 0]
+    end
 end
