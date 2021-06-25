@@ -3,11 +3,13 @@ module SupplyChains
 using LinearAlgebra
 
 export Capacity, Flow, Cost, SupplyChain, Schedule,
-    size, cost
+    size, cost, length, split_pos, update!, length, is_valid
 
-function check_eq(mess, e1, e2)
-    if e1 != e2
-        error(mess * ": $e1 ≠ $e2")
+function check_eq(mess, e0, es...)
+    for (i, e) in enumerate(es)
+        if e0 != e
+            error(mess * "at element $i: $e0 ≠ $e")
+        end
     end
 end
 
@@ -146,58 +148,89 @@ end
 
 Base.size(chain::SupplyChain) = size(chain.capacities)
 
-costs(s::SupplyChain, ap, ad) = cost(
+cost(s::SupplyChain, ap, ad) = cost(
     s.costs,
     ap,
     ad,
     s.flow
 )
 
-mutable struct Schedule
-    chain
-    active_plants
-    active_distributors
-    function Schedule(c, ap, ad)
-        dims = size(chain)
-        check_eq("Incongruent number of plants", length(ap), dims[2])
-        check_eq("Incongruent number of distributors", length(ad), dims[3])
-        new(c, ap, ad)
-    end
+function cost(s::SupplyChain, pos_vec)
+    as = split_pos(s, pos_vec)
+    cost(s, as[1], as[2])
 end
 
-cost(s::Schedule) = cost(
-    s.chain.costs, s.active_plants,
-    s.active_distributors, s.chain.load
-)
-
-function update!(s::Schedule, active_vec)
-    l = length(active_vec)
-    check_eq(
-        "Incongruent active nodes vector",
-        l,
-        length(s.active_plants) + length(s.active_distributors)
-    )
-
-    p = length(s.active_plants)
-
-    s.active_plants = active_vec[1:p]
-    s.active_distributors = active_vec[p+1:l]
+function split_pos(s::SupplyChain, pos_vec)
+    l = length(pos_vec)
+    dims = size(s)
+    check_eq("Incongruent active nodes vector", l,dims[2] + dims[3])
+    (pos_vec[1:dims[2]], pos_vec[p + 1:l])
 end
 
-function is_valid(s)
+function is_valid(s, pos_vec)
     true
 end
 
-module PSO
+module ParticleSwarm
+
+import ..SupplyChains: cost, check_eq
+
+export Particle, Swarm, move!, step!
 
 mutable struct Particle
-    velocity
     pos
+    velocity
+    momentum
     p_best
-    schedule
+    p_acc
+    function Particle(pos, m, acc)
+        z = zeros(length(pos))
+        new(pos, z, m, pos, acc)
+    end
 end
 
-function move!()
+function move!(p::Particle, best, acc, r1, r2)
+    check_eq(
+        "Incongruent vector dimentions",
+        length(p.pos), length(best),
+        length(r1), length(r2)
+    )
+    p_best_dir = p.p_acc * r1 .* (p.p_best - p.pos)
+    best_dir = acc * r2 .* (best - p.pos)
+    p.velocity = p.momentum * p.velocity + p_best_dir + best_dir
+    p.pos = activation.(p.pos, rand(length(p.pos)))
+end
+
+function move!(p::Particle, best, acc)
+    move!(p, best, acc, rand(length(best)), rand(length(best)))
+end
+
+activation(v, r) = if r < 1 / (1 + ℯ^v) 1 else 0 end
+
+mutable struct Swarm
+    particles
+    best_pos
+    best_acc
+    objective
+end
+
+function step!(s::Swarm)
+    # Some LP optimization
+    # End LP optimization
+
+    for p in s.particles
+        move!(p, s.best_pos, s.best_acc)
+
+        if cost(p.val, p.pos) < cost(p.val, p.p_best)
+            p.p_best = p.pos
+        end
+    end
+
+    for p in s.particles
+        if cost(s.objective, p.pos) < cost(s.objective, s.best_pos)
+            s.best_pos = p.pos
+        end
+    end
 end
 
 end
