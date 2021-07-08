@@ -1,0 +1,99 @@
+#+title: GPU accelerated discrete optimization in Julia
+
+* Todos
+** Social service meeting <2021-07-08 Thu 15:00 +1w>
+
+** `CUDA C`
+*** PROJ CUDA by Example [0/3]
+**** TODO Read CUDA by Example [4/6]
++ [X] Read chapter 1 and 2 from *Cuda by example*
++ [X] Setup `SSH` connection and install the tools on the server
++ [X] Read chapter 3 and run *Cuda by Example* basic scripts
++ [X] Read chapter 4
++ [ ] Read chapter 5
++ [ ] Read chapter 6
+**** TODO Try CUDA Example [2/5]
+1. [X] Recreate vector sum code
+2. [X] Recreate julia sets
+3. [ ] Recreate shared dot product
+4. [ ] Recreate simple ray tracing
+5. [ ] Add `Magick` or some image library to do real rendering.
+**** TODO CUDA.jl [/]
++ [ ] Review Documentation
+** Julia
+*** PROJ Julia basics [2/2]
+**** DONE Julia intro
+CLOSED: [2021-07-08 Thu 15:22]
+**** DONE Julia type system
+CLOSED: [2021-07-08 Thu 15:22]
+*** PROJ Sequential optimization [/]
+**** TODO Nassar
++ [ ] Recreate [[youtube:https://youtu.be/S5R8zXJOsUQ][her]] optimization tips
+**** TODO Bauman
++ [ ] Recreate [[https://juliaacademy.com/p/parallel-computing][Bauman]]'s code for SIMD optimization
+
+** Parallel computing
+*** PROJ Parallel Theory [1/2]
+**** DONE Pancake's paper
+CLOSED: [2021-07-08 Thu 15:22]
+**** TODO Pacheco [2/4]
++ [X] Chapter 2
++ [ ] Chapter 3
++ [X] Writes an introduction to the different types of parallel computing
++ [ ] Write more in depth notes for a MDMI GPUs architecture
+
+** Optimization problems
+*** PROJ Distance in graphs [0/4]
+**** TODO BFS [/]
++ [-] Finish *BFS* correctness proof
++ [ ] Toy sequential implementation
+**** TODO Djikstra [/]
++ [ ] Write notes for Djikstra's algorithm
+**** TODO Bellman-Ford [/]
++ [ ] Write notes for Bellman-Ford's algorithm
+**** TODO General conceptual diagram for distance problems
+*** PROJ Game Theory [/]
+**** TODO Write some intro to game theory
+*** PROJ PSO [0/2]
+**** TODO Write PSO notes [/]
++ [ ] Read Yang's chapter on the subject
+**** TODO Sequential implementation [1/2]
++ [X] Create toy implementation
++ [ ] Make notes
+*** PROJ Supply Chain [0/2]
+**** TODO Write somo intro to Supply Chains
+**** TODO Learn Linear Programming [/]
+SCHEDULED: <2021-07-08 Thu>
++ [ ] Read book
++ [ ] Recreate ~JUMP~ examples
++ [ ] Try to adapt PSO
+
+** CIMAT
+*** PROJ Autonomous cars <2021-07-09 Fri 10:45> [/]
+**** TODO Review PD Controll code [0/2]
+SCHEDULED: <2021-07-08 Thu>
++ [ ] Review and test code
++ [ ] Research a little theory about PD control
+**** TODO Try Hayet's challenge [0/2]
+SCHEDULED: <2021-07-08 Thu>
++ [ ] Test steering control code
++ [ ] Try to improve it?
+
+*** PROJ Parallel Thinking <2021-07-09 Fri 12:30> [0/2]
+**** TODO Review ~OpenMP~ example code [/]
+SCHEDULED: <2021-07-08 Thu>
++ [ ] Read Code
++ [ ] Recreate Code in ~C++~
+**** TODO Review ~MPI~ example code [/]
+SCHEDULED: <2021-07-08 Thu>
++ [ ] Read Code
++ [ ] Adapt code to my style
+*** Graduate studies event <2021-07-09 Fri 18:15-19:15>
+[[https://vc-conacyt.bluejeans.com/435087137][Video]]
+
+*** Open conferences
+<2021-07-12 Mon> <2021-07-13 Tue> <2021-07-14 Wed>
+<2021-07-15 Thu> <2021-07-16 Fri>
+
+[[https://veranos2021.eventos.cimat.mx/node/1622/][Full Schedule]]
+[[https://zoom.us/j/98513728805?pwd=ZW9lZUtyVTJidU45VTJNL1JpdU1YUT09][Link]]
