@@ -1,0 +1,83 @@
+#+title: CUDA
+#+subtitle:Thinking in parallel
+
+* Nvidia
+** Envorinments
+*** Driver
+*** Runtime
+*** Libraries
+** GPUs
++ Tesla, GeForce, Quadro, NVSr
++ Cuda arquitecrure evolves. Current 8.6 Lovelace.
+* Data flow
+
+#+begin_src mermaid :file img/data_flow.png
+graph LR
+  cpu(CPU) -- input to CPU --> gpu(GPU)
+  gpu -- processing in GPU --> gpu
+  gpu -- result to CPU --> cpu
+#+end_src
+
+#+RESULTS:
+[[file:img/data_flow.png]]
+
+Programs running on a GPU are called kernels. Each kernel is executed in several
+threads. Blocks of threads share memory and can synchroinze. Blocks can be
+arrays of 1, 2 or 3 dimentions, depending on the GPU architecture. The choice of
+dimentions dependes on the use case. They have up to 512 oe 1024 threads.
+
+Blocks exisit insize a grid, wich is also an array of 1, 2 or 3 dimentions, and
+can have up to $2^{16}-1$ or  $2^{31}-1$ blocks.
+
+* Memory model
+
+** DRAM
++ Local: internal memory for each thread
++ Global: shared between threads and CPU API
++ Constant: Read only
++ Texture: Read only, with graphics primitives, such as interpolation.
+
+Local and global are stored in shared registers. Constant and texture memory
+are cached globally.
+
+** Memory managment intructions
+*** Allocation
++ ~cudaMalloc((void**)prt, size_t, size)~
++ ~cudaFree(void *ptr)~
+
+*** Copy
++ ~cupdaMemcpy(void *src, void *dst, cudaMemcpyKind kind)~
+
+~cudaMemcpyKind = cudaMemcpyHostToHost = 0, ...~
+
+** Qualifiers
+*** Function
++ ~__device__~: called from a GPU, executed in GPU.
++ ~__global__~: called from either CPU or GPU. Must have thread configurations.
+  From a GPU, the nested threading is called dynamic parallelism and is only
+  available in more recent CUDA architectures.
++ ~__host__~: called from CPU, executed in CPU. Useless unless used with other
+  qualifier.
+
+*** Variable qualifiers
++ ~__shared__~: stored in cache
++ ~__constant__~
+
+* Built-in additions
+** Calling kernels
+~f<<<grid_dim, block_dim, shared_size, streams >>>()~
+Each call implicitly declares some variables: ~gridDim, blockIdx, blockDim,
+threadIdx~.
+
+** Types
+Other than regular C types, some built ins 2, 3, and 4 dimentional vectors, i.e.
+~float4, ulong2~. This is useful for example in image processing. Access to its
+elements with attributes ~x, y, z~.
+
+** Functions
++ ~__sinf(x), __expf(x)~: fast but imprecise
++ ~sinf(x), exp()~: precise but slower
+Can be activated with ~-use_fast_math~ flag in the compiler.
++ Atomic operations (for CUDA Architecture > 6.0).
+** Utils
++ ~__syncthreads~: for synchronization using shared memory.
