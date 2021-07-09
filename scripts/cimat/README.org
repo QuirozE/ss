@@ -1,15 +1,47 @@
-#+title: CUDA
-#+subtitle:Thinking in parallel
+#+title:Thinking in parallel
+#+subtitle: CIMAT 2021 Summer School
 
-* Nvidia
-** Envorinments
-*** Driver
-*** Runtime
-*** Libraries
-** GPUs
+* ~OpenMP~
+
+Open MultiProcessor. It is a ~C~ library for easy excution of multithreading
+code using shared memory. It annotes code using
+[[https://gcc.gnu.org/onlinedocs/cpp/Pragmas.html][pragmas]] to indicate
+parallel sections. This simplifies the parallelization of a sequential program.
+
+To use it, add ~#include <omp.h>~ to the program header. To compile it, the
+~-fopenmp~ flag must be used.
+
+** Useful functions
+
+As it is a library, it provides useful functions related to threads.
++ ~omp_get_wtime()~: useful for measuring performance.
++ ~omp_num_threads()~: to divide work
++ ~omp_get_thread_num()~: thread identifier
+
+** Pragmas
+
+Syntax ~#pragma omp others...~. Everything not recognized as a pragma in the
+same line will be ignores. Following a pragma must be a code block.
+
++ ~parallel~: code block will be executed by all threads.
++ ~for~: code block must be a for cycle. Iterations will be diveded among
+   threads. Only simple loops are allowed.
++ ~privade(v1, v2, ...)~: each thread will get a copy of the variables.
++ ~shared(v1, v2, ...)~: shared memory. May cause synchronzation problems.
++ ~reduction (var:func)~: folds intermediate results into the variable.
+
+* ~MPI~
+
+* ~CUDA~
+** Nvidia
+*** Envorinments
+**** Driver
+**** Runtime
+**** Libraries
+*** GPUs
 + Tesla, GeForce, Quadro, NVSr
 + Cuda arquitecrure evolves. Current 8.6 Lovelace.
-* Data flow
+** Data flow
 
 #+begin_src mermaid :file img/data_flow.png
 graph LR
@@ -29,9 +61,9 @@ dimentions dependes on the use case. They have up to 512 oe 1024 threads.
 Blocks exisit insize a grid, wich is also an array of 1, 2 or 3 dimentions, and
 can have up to $2^{16}-1$ or  $2^{31}-1$ blocks.
 
-* Memory model
+** Memory model
 
-** DRAM
+*** DRAM
 + Local: internal memory for each thread
 + Global: shared between threads and CPU API
 + Constant: Read only
@@ -40,18 +72,18 @@ can have up to $2^{16}-1$ or  $2^{31}-1$ blocks.
 Local and global are stored in shared registers. Constant and texture memory
 are cached globally.
 
-** Memory managment intructions
-*** Allocation
+*** Memory managment intructions
+**** Allocation
 + ~cudaMalloc((void**)prt, size_t, size)~
 + ~cudaFree(void *ptr)~
 
-*** Copy
+**** Copy
 + ~cupdaMemcpy(void *src, void *dst, cudaMemcpyKind kind)~
 
 ~cudaMemcpyKind = cudaMemcpyHostToHost = 0, ...~
 
-** Qualifiers
-*** Function
+*** Qualifiers
+**** Function
 + ~__device__~: called from a GPU, executed in GPU.
 + ~__global__~: called from either CPU or GPU. Must have thread configurations.
   From a GPU, the nested threading is called dynamic parallelism and is only
@@ -59,25 +91,25 @@ are cached globally.
 + ~__host__~: called from CPU, executed in CPU. Useless unless used with other
   qualifier.
 
-*** Variable qualifiers
+**** Variable qualifiers
 + ~__shared__~: stored in cache
 + ~__constant__~
 
-* Built-in additions
-** Calling kernels
+** Built-in additions
+*** Calling kernels
 ~f<<<grid_dim, block_dim, shared_size, streams >>>()~
 Each call implicitly declares some variables: ~gridDim, blockIdx, blockDim,
 threadIdx~.
 
-** Types
+*** Types
 Other than regular C types, some built ins 2, 3, and 4 dimentional vectors, i.e.
 ~float4, ulong2~. This is useful for example in image processing. Access to its
 elements with attributes ~x, y, z~.
 
-** Functions
+*** Functions
 + ~__sinf(x), __expf(x)~: fast but imprecise
 + ~sinf(x), exp()~: precise but slower
 Can be activated with ~-use_fast_math~ flag in the compiler.
 + Atomic operations (for CUDA Architecture > 6.0).
-** Utils
+*** Utils
 + ~__syncthreads~: for synchronization using shared memory.
