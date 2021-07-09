@@ -63,33 +63,40 @@ CLOSED: [2021-07-08 Thu 15:22]
 *** PROJ Supply Chain [0/2]
 **** TODO Write somo intro to Supply Chains
 **** TODO Learn Linear Programming [/]
-SCHEDULED: <2021-07-08 Thu>
+SCHEDULED: <2021-07-12 Mon>
 + [ ] Read book
 + [ ] Recreate ~JUMP~ examples
 + [ ] Try to adapt PSO
 
 ** CIMAT
-*** PROJ Autonomous cars <2021-07-09 Fri 10:45> [/]
-**** TODO Review PD Controll code [0/2]
-SCHEDULED: <2021-07-08 Thu>
+*** KILL Autonomous cars <2021-07-09 Fri 10:45> [2/2]
+CLOSED: [2021-07-09 Fri 15:12]
+**** KILL Review PD Controll code [0/2]
+CLOSED: [2021-07-09 Fri 15:12] SCHEDULED: <2021-07-08 Thu>
 + [ ] Review and test code
 + [ ] Research a little theory about PD control
-**** TODO Try Hayet's challenge [0/2]
-SCHEDULED: <2021-07-08 Thu>
+**** KILL Try Hayet's challenge [0/2]
+CLOSED: [2021-07-09 Fri 15:12] SCHEDULED: <2021-07-08 Thu>
 + [ ] Test steering control code
 + [ ] Try to improve it?
 
-*** PROJ Parallel Thinking <2021-07-09 Fri 12:30> [0/2]
-**** TODO Review ~OpenMP~ example code [/]
-SCHEDULED: <2021-07-08 Thu>
-+ [ ] Read Code
-+ [ ] Recreate Code in ~C++~
+*** PROJ Parallel Thinking <2021-07-09 Fri 12:30> [1/2]
+**** DONE Review ~OpenMP~ example code [2/2]
+CLOSED: [2021-07-09 Fri 14:52] SCHEDULED: <2021-07-08 Thu>
+:LOGBOOK:
+CLOCK: [2021-07-09 Fri 14:45]--[2021-07-09 Fri 14:52] =>  0:07
+CLOCK: [2021-07-09 Fri 11:31]--[2021-07-09 Fri 11:57] =>  0:26
+CLOCK: [2021-07-09 Fri 01:39]--[2021-07-09 Fri 02:05] =>  0:26
+CLOCK: [2021-07-09 Fri 01:09]--[2021-07-09 Fri 01:34] =>  0:25
+:END:
++ [X] Read Code
++ [X] Recreate Code in ~C++~
 **** TODO Review ~MPI~ example code [/]
 SCHEDULED: <2021-07-08 Thu>
 + [ ] Read Code
 + [ ] Adapt code to my style
 *** Graduate studies event <2021-07-09 Fri 18:15-19:15>
-[[https://vc-conacyt.bluejeans.com/435087137][Video]]
+[[https://vc-conacyt.bluejeans.com/435087137][Link]]
 
 *** Open conferences
 <2021-07-12 Mon> <2021-07-13 Tue> <2021-07-14 Wed>

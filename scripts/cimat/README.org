@@ -3,10 +3,11 @@
 
 * ~OpenMP~
 
-Open MultiProcessor. It is a ~C~ library for easy excution of multithreading
-code using shared memory. It annotes code using
+Open MultiProcessor Library. It is a ~C~ library for easy excution of
+multithreading code using shared memory. It annotes code using
 [[https://gcc.gnu.org/onlinedocs/cpp/Pragmas.html][pragmas]] to indicate
-parallel sections. This simplifies the parallelization of a sequential program.
+parallel sections. This simplifies the parallelization of a exisiting
+sequential programs.
 
 To use it, add ~#include <omp.h>~ to the program header. To compile it, the
 ~-fopenmp~ flag must be used.
@@ -20,18 +21,17 @@ As it is a library, it provides useful functions related to threads.
 
 ** Pragmas
 
-Syntax ~#pragma omp others...~. Everything not recognized as a pragma in the
-same line will be ignores. Following a pragma must be a code block.
+Syntax ~#pragma omp ...~. Everything not recognized as a pragma in the
+same line will be ignored. After a pragma a code block must follow.
 
 + ~parallel~: code block will be executed by all threads.
 + ~for~: code block must be a for cycle. Iterations will be diveded among
    threads. Only simple loops are allowed.
-+ ~privade(v1, v2, ...)~: each thread will get a copy of the variables.
++ ~private(v1, v2, ...)~: each thread will get a copy of the variables.
 + ~shared(v1, v2, ...)~: shared memory. May cause synchronzation problems.
 + ~reduction (var:func)~: folds intermediate results into the variable.
 
 * ~MPI~
-
 * ~CUDA~
 ** Nvidia
 *** Envorinments
@@ -45,7 +45,7 @@ same line will be ignores. Following a pragma must be a code block.
 
 #+begin_src mermaid :file img/data_flow.png
 graph LR
-  cpu(CPU) -- input to CPU --> gpu(GPU)
+  cpu(CPU) -- input to GPU --> gpu(GPU)
   gpu -- processing in GPU --> gpu
   gpu -- result to CPU --> cpu
 #+end_src
