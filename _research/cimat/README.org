@@ -32,6 +32,38 @@ same line will be ignored. After a pragma a code block must follow.
 + ~reduction (var:func)~: folds intermediate results into the variable.
 
 * ~MPI~
+
+Message Passage Interface is a library implementing the message passing
+distributed computational model. Each process has an independant memory and
+communicates with other processes through messages. This model is flexible, as
+it can be used with multicore systems, but also with networks and clusters
+without too much setup.
+
+** Basic functions
+
+These functions bring most of ~MPI~ functionality. The rest of the API is mostly
+to facilitate other tasks.
+
++ ~MP_INIT~: inits communication with other processes
++ ~MP_Comm_size~: number of proccess
++ ~MP_Comm_rank~: proccess id
++ ~MP_Send~: sends message to other proccess
++ ~MP_Recv~: reads messages from other proccess
+
+** Compiler and runtime
+~MPI~ is just an standard. There are several implementations. The most popular
+are [[https://www.mpich.org/][MPICH | High-Performance Portable MPI]] and
+[[https://www.open-mpi.org/][Open MPI: Open Source High Performance Computing]].
+As with all ~C/C++~ libraries, the installation is dependant on the operative
+system.
+
+Furthermore, as ~MPI~ must may run in networks or clusters, it must configure
+more than just executable code. For this, there are wrappers around the compiler
+to setup the extra things.
+
++ ~mpicxx~: compiles the code
++ ~mpiexec~: runs the binary
+
 * ~CUDA~
 ** Nvidia
 *** Envorinments
@@ -51,7 +83,6 @@ graph LR
 #+end_src
 
 #+RESULTS:
-[[file:img/data_flow.png]]
 
 Programs running on a GPU are called kernels. Each kernel is executed in several
 threads. Blocks of threads share memory and can synchroinze. Blocks can be
