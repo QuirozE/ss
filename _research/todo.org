@@ -63,7 +63,7 @@ CLOSED: [2021-07-08 Thu 15:22]
 *** PROJ Supply Chain [0/2]
 **** TODO Write somo intro to Supply Chains
 **** TODO Learn Linear Programming [/]
-SCHEDULED: <2021-07-12 Mon>
+SCHEDULED: <2021-07-18 Sun 12:0>
 + [ ] Read book
 + [ ] Recreate ~JUMP~ examples
 + [ ] Try to adapt PSO
@@ -80,7 +80,7 @@ CLOSED: [2021-07-09 Fri 15:12] SCHEDULED: <2021-07-08 Thu>
 + [ ] Test steering control code
 + [ ] Try to improve it?
 
-*** PROJ Parallel Thinking <2021-07-09 Fri 12:30> [1/2]
+*** PROJ Parallel Thinking <2021-07-09 Fri 12:30> [2/2]
 **** DONE Review ~OpenMP~ example code [2/2]
 CLOSED: [2021-07-09 Fri 14:52] SCHEDULED: <2021-07-08 Thu>
 :LOGBOOK:
@@ -91,11 +91,14 @@ CLOCK: [2021-07-09 Fri 01:09]--[2021-07-09 Fri 01:34] =>  0:25
 :END:
 + [X] Read Code
 + [X] Recreate Code in ~C++~
-**** TODO Review ~MPI~ example code [/]
-SCHEDULED: <2021-07-08 Thu>
-+ [ ] Read Code
-+ [ ] Adapt code to my style
-*** Graduate studies event <2021-07-09 Fri 18:15-19:15>
+**** DONE Review ~MPI~ example code [2/2]
+CLOSED: [2021-07-15 Thu 11:38] SCHEDULED: <2021-07-08 Thu>
+:LOGBOOK:
+CLOCK: [2021-07-15 Thu 11:35]--[2021-07-15 Thu 11:38] =>  0:03
+:END:
++ [X] Read Code
++ [X] Adapt code to my style
+*** Graduate studies event <2021-07-16 Fri 12:00-13:00>
 [[https://vc-conacyt.bluejeans.com/435087137][Link]]
 
 *** Open conferences
@@ -104,3 +107,10 @@ SCHEDULED: <2021-07-08 Thu>
 
 [[https://veranos2021.eventos.cimat.mx/node/1622/][Full Schedule]]
 [[https://zoom.us/j/98513728805?pwd=ZW9lZUtyVTJidU45VTJNL1JpdU1YUT09][Link]]
+** JuliaConf 2021
+*** GPU programming in Julia <2021-07-20 Tue 09:00>
+*** Game development in Julia <2021-07-22 Thu 09:00>
+*** Solving differential equations in parallel on GPUs <2021-07-23 Fri 09:00>
+*** Package development<2021-07-24 Sat 09:00>
+*** Parse and broker messages with CombinedParsers<2021-07-25 Sun 09:00>
+*** Introduction to metaprogramming in Julia <2021-07-27 Tue 09:00>
