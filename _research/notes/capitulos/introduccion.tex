@@ -2,66 +2,62 @@
 \label{cap:intro}
 
 \section{Motivación}
-%\par\noindent
-%{\large \bf{Motivación}}\\
-%\label{intro_mot}
-%\index{motivación}
- 
-%\par\noindent
-%{\large \bf{Objetivo}}\\
+
+Gran cantidad de problemas como simulación del clima, análisis de genómas,
+investigación en nuevas energía o aprendizaje de máquina \cite{Pacheco2011}
+requieren gran poder computacional para ser resueltos. Por lo que mayor poder
+de cómputo disponible aumenta la cantidad de problemas tratables. En el pasado,
+esto se lograba aumentando la velocidad y densidad de transistores en los
+procesadores. Sin embargo, esta técnica está llegando a un límite físico.
+
+Así que en los últimos años, para obtener un aumento en el rendimiento se usan
+sistemas paralelos. Estos pueden variar desde un procesador con varios núcleos
+hasta redes de computadores. El tener varias unidades de cómputo permite obtener
+mejoras de rendimiento a pesar de no tener procesadores más veloces.
+
+Pero hacerlo introduce problemas concernientes a la coordinación de todas las
+partes. Los detalles del problema y las diferentes técnicas y herramientas para
+lidiar con ellos dependen bastante de la infraestructura particular.
+
 \section{Objetivo}
-%\label{intro_obj}
-%\index{objetivo}
 
-El objetivo general de este trabajo consiste en:
+El objetivo general de este trabajo consiste en analizar que tanto se puede
+mejorar el rendimiento de una heuristica existente para el problema de la
+optimización de cadenas de suministros.
 
-Los objetivos particulares consisten en:
+Los objetivos particulares consisten en
 
+\begin{itemize}
+  \item Determinar los puntos de paralelización de la técnica existente
+  \item Analizar las mejoras en tiempos de la implementación paralela
+  \item Analizar las mejoras en calidad de la implementación paralela
+\end{itemize}
 
-
-%\par\noindent
-%{\large \bf{Metodología}}\\
-%\section{Metodología}
-%\label{intro_met}
-%\index{metodología}
-
-%\par\noindent
-%{\large \bf{Metas}}\\
 \section{Metas}
-%\label{intro_meta}
-%\index{metas}
-
 Se establecieron como metas:
-
-%\par\noindent
-%{\large \bf{Contribución}}\\
-%\section{Contribución}
-%\label{intro_cont}
-%\index{contribución}
 
 Las contribuciones de este trabajo son:
 
-
-%\par\noindent
-%{\large \bf{Logros}}\\
-%\section{Logros}
-%\label{intro_log}
-%\index{logros}
-
-%\par\noindent
-%{\large \bf{Organización de la Tesis}}\\
 \section {Organización de la tesis}
-%\label{intro_org}
-%\index{organización}
 
-Este trabajo se desarrolla en .. capítulos, incluyendo esta introducción, y una sección adicional de apéndices que complementan la investigación.%\\
+Este trabajo se desarrolla en seis capítulos, incluyendo esta introducción, y
+una sección adicional de apéndices que complementan la investigación.
 
-En el Capítulo 2, se presentan los \textbf{Antecedentes}. Donde se hace...%\\
+En \cref{cap:supply}, se presenta el problema de cadenas de suministros. Se
+incluye su formalización como problema de optimización, se mencionan las
+dificultades para obtener soluciones óptimas y las técnicas usadas para
+resolverlo. En \cref{cap:paralelism} se presentan los diferentes tipos de
+paralelismo y se estudian algunas técinas comunes para paralelizar algoritmos
+secuenciales. En \cref{cap:parallel-bpso} se analiza la heuristica propuesta en
+\cref{cap:supply} usando los criterios presentados en \cref{cap:paralelism} y
+se propone una versioń paralelizada. En \cref{cap:results} se realiza una
+comparación cualitativa entre los recursos y la calidad de las soluciones tanto
+de la solución secuencial como la solución paralela. Se concluye el trabajo con
+el \cref{cap:conc}, donde se exponen los comentarios finales y se sugiere el
+trabajo a relizar en próximas investigaciones.
 
-En el Capítulo 3, \textbf{Capítulo...}, se presentan ...%\\
-
-...
-
-Se concluye el trabajo con una sección de \textbf{Conclusiones y Trabajo Futuro}, capítulo..., en donde se exponen .... los comentarios finales y se sugiere el trabajo a relizar en próximas investigaciones.%\\
-
-Se anexan en la sección \textbf{Apéndices} los apartados: ...
+Se anexan además varios apéndices. En el \cref{app:gpus} se describe la
+arquitectura de las tarjetas CUDA de Nvidia, así como conceptos básicos de
+CUDA y \texttt{nvcc}. En el \cref{app:julia} se introducen conceptos básicos
+del lenguaje Julia, así como algunas bibliotecas útiles. En el \cref{app:linprog}
+se da un breve repaso de programas lineals y del método Simplex.

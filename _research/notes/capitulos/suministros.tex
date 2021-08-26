@@ -1,0 +1,156 @@
+\chapter{Cadenas de Suministros}
+\label{cap:supply}
+
+La \iem{logística} de un sistema consiste en satisfacer ciertas demandas,
+de materias primas, de tiempo, bajo ciertas restricciones, normalmente
+presupuesto, mientras se intenta optimizar una medida de desempeño, normalmente
+el costo de materiales y transporte.
+
+En el ámbito industrial, la logística se denomina \iem{cadena de suministros}.
+Esta tiene dos etapas, la \iem{cadena de producción} y la \iem{cadena de
+distribución} \cite{Musmanno2004}.
+
+\section{Formalización}
+
+Su estrucutura depende del caso en particular, pero siguiendo el modelo
+simplificado planteado por \cite{Canales2016}, se considera que la cadena de
+producción tiene entrada fija de proveedores y plantas de ensamblaje. A su vez,
+la cadena de distribución tiene centros de distribución, proveídos por las
+plantas de ensamblaje, y puntos de venta. Cada instalación tiene un costo de
+operación fijo. El transporte entre cada instalación tiene un costo unitario.
+Cada instalación tiene una capacidad de producción máxima, y los puntos de venta
+tiene una demanda. Formalmente el problema tiene
+
+\begin{itemize}
+  \item Proveedores $S$, plantas de ensamplaje $P$, centros de distribución $D$
+        y puntos de venta $C$. Las instalaciones se denominan
+        $I = S \cup P \cup D \cup C$.
+  \item Matrix de costo unitario $U \in \mathbb{M}_{|I| \times |I|}$, donde
+        $U_{ij}$ representa el costo de mover una unida de productos de la
+        instalación $i$ a la instalación $j$
+  \item Cada instalación tiene un costo fijo $F: I \to \mathbb{R}^{+}$.
+  \item Cada instalación tiene una capacidad (o demanda) fija
+        $W: I \to \mathbb{R}^{+}$.
+  \item $P_{max}$ y $D_{max}$ para limitar la cantidad de plantas y centros de
+        distribución a abrir.
+\end{itemize}
+
+El objectivo de la logística es encontrar como repartir la carga entre las
+plantas de producción y en los centros de distribución para respetar las
+restricciones y minimizando el costo. Formalmente
+
+\begin{itemize}
+  \item Determinar $O: I \to \set{0, 1}$ que indique que instalaciones
+        hay que abrir. Tanto los proveedores como los puntos de venta tiene
+        que estar abiertos siempre.
+  \item Determinar matrix de cargas $X$, donde $X_{ij}$ es la cantidad de
+        productos que va a circular entre la instalación $i$ y $j$.
+\end{itemize}
+
+\section{Programación lineal}
+
+Dado una $O$ fija, encontrar $X$ se puede formular como un problema de
+programación lineal, por lo que se pueden encontrar los valores óptimos
+en tiempo polinomial. La formulación sería minimzar
+
+\begin{equation}
+  \label{eq:supply-cost}
+  z(O) = \sum_{i, j \in I^{2}}{O(i)O(j)X_{i, j}U_{i, j}} +
+  \sum_{i \in P \cup D}{O(i)F(i)}
+  \text{ costo fijo + costo unitario }
+\end{equation}
+
+sujeto a
+
+\begin{align*}
+  \label{eq:supply-constraints}
+  &\sum_{j \in I}{X_{i, j}} \leq W(i), \forall i \in I
+    \text{ respetar capacidades }\\
+  &\sum_{i \in I}{X_{i, c}} \geq W(c), \forall c \in C
+    \text{ satisfacer demandas }\\
+  &\sum_{i \in I}{X_{i, j}} = \sum_{k \in I}{X_{j, k}}, \forall j \in P \cup D
+    \text{ flujo constante }\\
+  &\sum_{p \in P}{O(p)} \leq P_{max}, \sum_{d \in D}{O(d)} \leq D_{max}
+    \text{ respetar máximo de instalaciones}
+\end{align*}
+
+Luego, para resolver este problema usando el método Simplex (ver
+\label{app:linprog}) hay que pasar esta formulación a un formato equacional.
+
+\section{Enjambre de partículas}
+
+Una de las técnicas presentadas por \cite{Canales2016} es una variante de la
+técnica de optimización por enjambre de partículas (PSO por sus siglas en
+inglés). Esta es una heuristica bioinspirada en los movimientos de parvadas
+de pájaros, que carecen de lider pero imitando localemente a las aves cercanas
+surgen patrones complejos.
+
+La técnica original funciones con espacios continuos, en general
+$\mathbb{R}^{n}$, así que la técina presentada por \cite{Canales2016} es una
+variante para trabajar con espacios binarios. En esta técnica se tiene un
+conjunto $X$ de $k$ partículas, donde cada una representa una solución al
+problema de optimización.
+
+Cada partícula tiene una velocidad $V$ asociada. En cada paso, la velocidad se
+actualiza usando la \cref{eq:bpso-vup}.
+
+\begin{equation}
+  \label{eq:bpso-vup}
+  v \gets \phi v + c_{1}U(0, 1)(x^{\star} - x)
+  + c_{2}U(0, 1)(\mathbf{x}^{\star} - x)
+\end{equation}
+
+donde $x^{\star}$ es la mejor posición alcanzada por$x$, $\mathbf{x}^{\star}$ es
+la mejor posición global actual, $\phi$ es la constante de aceleración, $c_{i}$
+son constantes para determinar cuando influencia la mejor solución personal y
+global.
+
+Luego, usando la velocidad actualizada se puede actualizar el $i$ésimo
+componente de la particula $x$ con la \cref{eq:bpso-xup}.
+
+\begin{equation}
+  \label{eq:bpso-xup}
+  x_{i} \gets \begin{cases}
+    0, \text{ si } U(0, 1) \leq f(v)\\
+    1, \text{ en otro caso }
+  \end{cases}
+\end{equation}
+
+donde $f(v) = \frac{1}{1+e^{-v}}$. Una secuencia general de los pasos de la
+optimización se puede ver en el \cref{alg:bpso}.
+
+\begin{algorithm}
+  \caption{Enjambre de particulas binarias}
+  \label{alg:bpso}
+  \begin{algorithmic}[1]
+    \Require{Función $z$ a optimizar, $n$ número de partículas,
+      $k$ número de rondas, $\phi$ constante de aceleración, $c_{1}, c_{2}$
+      constantes de influencia}
+    \Ensure{Mejor solución $x$ encontrada}
+    \Function{BPSO}{$z$, $k$, $n$}
+      \State{Generar $n$ soluciones aleatorias y guardarlas en $X$}
+      \State{Inicilizar velocidades $V$ en cero y mejores soluciones $X^{\star}$}
+      \State{Encontrar mejor solución actual $x^{\star}$}
+      \For{$t \in 0..k$}
+        \For{$i \in 0..n$}
+          \State{Actualizar $V[i]$ usando la \cref{eq:bpso-vup}}
+          \State{Actualizar $X[i]$ usando la \cref{eq:bpso-xup}}
+          \State{Aplicar optimización adicional}\label{alg:pso-opt}
+          \Comment{Opcional}
+          \State{Actualizar mejor solución global $x^{\star}$ y local $X^{\star}$}
+        \EndFor
+      \EndFor
+      \Return{$x^{\star}$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+Esta técnica se puede usar para encontrar las instalaciones óptimas para abrir,
+pues es un vector binario, con un flujo de productos fijo. Para optimizar ese
+flujo, hay que notar que se tiene una $x$ fija en cada ciclo, así que se puede
+construir la formulación de la \cref{eq:supply-cost} para optimizar los flujos
+de productos.
+
+Sería una optimización en dos partes. Con BPSO optimizando las instalaciones
+a abrir y algún método de programación lineal para optimizar los flujos de
+productos.

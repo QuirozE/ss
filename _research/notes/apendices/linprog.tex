@@ -1,0 +1,42 @@
+\chapter{Programación Lineal}
+\label{app:linprog}
+
+Un problema de optimización lineal requiere maximizar (o minimizar) una función
+lineal $z$ bajo $m$ restricciones lineales.
+
+\begin{align}
+  a_{j} \le k_{j}\\
+  a_{j} \ge k_{j}\\
+  a_{j} = k_{j}
+\end{align}
+
+donde tanto $z$ como $a_{i}$ son combinaciones lineales de un conjunto
+${x_{i}}_{i=1}^{k}$ de variables y $k_{j}$ son números reales. Esto puede ser
+restrictivo en varios casos, pero aún así existen una gran cantidad de problemas
+que pueden ser formulados de esta forma. Usando la linealidad de la función
+objetivo y de las restricciones, se han desarrollado varios métodos para
+encontrar soluciones óptimas en tiempo razonable.
+
+\section{Forma ecuacional}
+
+Un problema está en forma ecuacional si todas sus restricciones (excepto las de
+no negativiad) son ecuaciones (i.e. $a_{j} = k_{j}$) con $k_{j} \ge 0$ y todas
+las variables son no negativas. Para todo problema, es posible construir un
+problema en forma ecuacional con la misma solución óptima. Para hacer esto se
+puede hacer lo siguiente
+
+\begin{itemize}
+  \item Si $k_{j} < 0$, se multiplica la restricción por $-1$ y se usa alguno de
+        los casos siguientes.
+  \item Si se tiene una variable $x_{j}$ que puede tener valores positivos y
+        nagativos, se usan dos nuevas variables para obtener la ecuación
+        $x_{j} = x_{j}^{+} - x_{j}^{-}$, con $x_{j}^{-}, x_{j}^{+} \ge 0$.
+  \item Para las desigualdades de la forma $a_{j} \le k_{j}$, se introduce una
+        variable $s_{j}$ de \emph{sobra} (\emph{slack} en inglés). La ecuación
+        equivalente sería $a_{j} + s_{j} = k_{j}$ y además se agrega la
+        restricción $s_{j} \ge 0$
+
+  \item Para las desigualdades $a_{j} \ge k_{j}$, se hace algo análogo al caso
+        anterior. La ecuación resultante es $a_{j} - s_{j} = k_{j}$ y $s_{j}
+        \ge 0$.
+\end{itemize}

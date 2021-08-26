@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.5
+# v0.14.7
 
 using Markdown
 using InteractiveUtils
@@ -95,7 +95,7 @@ correr una función.
 """
 
 # ╔═╡ bb69abfb-8831-43a4-ab16-dec8d8369667
-@btime cypher_text(cesar, small_text)
+@show @btime cypher_text(cesar, small_text)
 
 # ╔═╡ 351c228e-ccc7-44e3-9007-1f09f1919daf
 md"""
