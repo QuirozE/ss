@@ -1,3 +1,20 @@
+"""
+Logistics in a system are the mechanisms for satisfying demands, such are raw
+materials or time, under certain restrictions, usually a budget, while
+optimizing a cost.
+
+In an industrial environment, the losgistics are the supply chain. It usually
+has two stages: a production chain and a distribution chain.
+
+In this toy example, the production chain has some fixed raw materials suppliers
+and some assembly plants. The distribution chain has some distribution center
+(supplied by the assembly plants) and selling points.
+
+Each installation has a fixed operation cost, and transportation between
+installations has a cost per unit. Suppliers, assembly plants and distribution
+centers have a maximum capacity, and selling points have a demand.
+
+"""
 module SupplyChains
 
 using LinearAlgebra
@@ -5,6 +22,11 @@ using LinearAlgebra
 export Capacity, Flow, Cost, SupplyChain,
     size, cost, length, split_pos, is_valid
 
+"""
+    check_eq(mess, e1, e2)
+
+Checks if all elements are equal and launch an error with message `mess` if not.
+"""
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
         if e0 != e
@@ -13,6 +35,7 @@ function check_eq(mess, e0, es...)
     end
 end
 
+"Unitary cost for the installation in the supply chain"
 struct Capacity
     suppliers
     plants
@@ -20,6 +43,7 @@ struct Capacity
     clients
 end
 
+"Stub equals because default struct equality doens't work for arrays"
 function Base.:(==)(c1::Capacity, c2::Capacity)
     (
         isequal(c1.suppliers, c2.suppliers) &&
@@ -29,10 +53,19 @@ function Base.:(==)(c1::Capacity, c2::Capacity)
     )
 end
 
+"""
+Returns size of each set of installations in the supply chain
+"""
 function Base.size(cap::Capacity)
     length.((cap.suppliers, cap.plants, cap.distributors, cap.clients))
 end
 
+"""
+Generic struct to represent weight on the underling supply chain graph. It has
+two uses (for now):
+* unitary cost
+* product load
+"""
 struct Flow
     supls_plants
     plants_dists
@@ -58,6 +91,9 @@ function Base.:(==)(f1::Flow, f2::Flow)
     )
 end
 
+"""
+Given a flow, put to zero all weights related to active plants and active dists.
+"""
 function active_flow(e, active_plants, active_dists)
     plants_matrix = Diagonal(active_plants)
     dists_matrix = Diagonal(active_dists)
@@ -67,6 +103,7 @@ function active_flow(e, active_plants, active_dists)
     Flow(supl_plants_cost, plants_dist_cost, dist_clients_cost)
 end
 
+"Squash all flow into a giant vector"
 function Base.vec(e::Flow)
     sp = vec(e.supls_plants)
     pd = vec(e.plants_dists)
@@ -78,6 +115,7 @@ function Base.size(e::Flow)
     (size(e.supls_plants)..., size(e.dists_clients)...)
 end
 
+"Unitary cost and fixed cost in a single, convenient struct"
 struct Cost
     plants
     distributors
@@ -106,7 +144,11 @@ end
 
 Base.size(cost::Cost) = size(cost.unitary)
 
-function cost(c, ap, ad, load)
+"""
+Given a cost struct, the vector of active plants and distributors and the
+active product load, calculate the price of the given setup.
+"""
+function (c::Cost)(ap, ad, load)
     dims = size(c)
     check_eq("Incongruent number of plants", length(ap), dims[2])
     check_eq("Incongruent number of distributors", length(ad), dims[3])
@@ -118,6 +160,12 @@ function cost(c, ap, ad, load)
     al_cost + f_cost
 end
 
+"""
+Finally, putting together everything.
+* capacities vector (for assembly plants and distributors)
+* cost (a Cost struct)
+* max_* max allowed open installations
+"""
 struct SupplyChain
     capacities
     costs
@@ -140,18 +188,6 @@ end
 
 Base.size(chain::SupplyChain) = size(chain.capacities)
 
-cost(s::SupplyChain, ap, ad, flow) = cost(
-    s.costs,
-    ap,
-    ad,
-    flow
-)
-
-function cost(s::SupplyChain, pos_vec, flow)
-    as = split_pos(s, pos_vec)
-    cost(s, as[1], as[2], flow)
-end
-
 function split_pos(s::SupplyChain, pos_vec)
     l = length(pos_vec)
     dims = size(s)
@@ -163,73 +199,6 @@ function is_valid(s, pos_vec, flow)
     true
 end
 
-module ParticleSwarm
-
-import ..SupplyChains: cost, check_eq
-
-export Particle, Swarm, move!, step!
-
-mutable struct Particle
-    pos
-    velocity
-    momentum
-    p_best
-    p_acc
-    function Particle(pos, m, acc)
-        z = zeros(length(pos))
-        new(pos, z, m, pos, acc)
-    end
-end
-
-function move!(p::Particle, best, acc, r1, r2, r3)
-    check_eq(
-        "Incongruent vector dimentions",
-        length(p.pos), length(best),
-        length(r1), length(r2)
-    )
-    p_best_dir = p.p_acc * r1 .* (p.p_best - p.pos)
-    best_dir = acc * r2 .* (best - p.pos)
-    p.velocity = p.momentum * p.velocity + p_best_dir + best_dir
-    p.pos = activation.(p.velocity, r3)
-end
-
-move!(p::Particle, best, acc) = move!(
-    p, best, acc,
-    rand(length(best)),
-    rand(length(best)),
-    rand(length(best))
-)
-
-activation(v, r) = if r < 1 / (1 + ℯ^v) 1 else 0 end
-
-mutable struct Swarm
-    particles
-    best_pos
-    best_acc
-    obj
-    opt
-end
-
-function step!(s::Swarm)
-    # Some LP optimization
-    extra = s.opt.(s.particles, s.obj)
-    # End LP optimization
-
-    for (i, p) in enumerate(s.particles)
-        move!(p, s.best_pos, s.best_acc)
-
-        if cost(s.obj, p.pos, extra[i]) < cost(s.obj, p.p_best, extra[i])
-            p.p_best = p.pos
-        end
-    end
-
-    for (i, p) in enumerate(s.particles)
-        if cost(s.obj, p.pos, extra[i]) < cost(s.obj, s.best_pos, extra[i])
-            s.best_pos = p.pos
-        end
-    end
-end
-
-end
+include("ParticleSwarm.jl")
 
 end # module

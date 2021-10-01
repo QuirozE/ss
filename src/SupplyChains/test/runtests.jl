@@ -55,28 +55,28 @@ import SupplyChains:active_flow
             rand(1:10, (dims[3], dims[4]))
         ]
         rand_unit_cost = Cost(z[1], z[2], rm[1], rm[2], rm[3])
-        @test cost(rand_unit_cost, o[1], o[2], full_flow) == sum(sum.(rm))
-        @test cost(rand_unit_cost, z[1], z[2], full_flow) == 0
+        @test rand_unit_cost(o[1], o[2], full_flow) == sum(sum.(rm))
+        @test rand_unit_cost(z[1], z[2], full_flow) == 0
 
         sp_only = Flow(om[1], zm[2], zm[3])
-        @test cost(rand_unit_cost, o[1], o[2], sp_only) == sum(rm[1])
+        @test rand_unit_cost(o[1], o[2], sp_only) == sum(rm[1])
 
         rf = [rand(1:10, dims[2]), rand(1:10, dims[3])]
         rand_fixed_cost = Cost(rf[1], rf[2], zm[1], zm[2], zm[3])
-        @test cost(rand_fixed_cost, o[1], o[2], full_flow) == sum(sum.(rf))
+        @test rand_fixed_cost(o[1], o[2], full_flow) == sum(sum.(rf))
     end
 end
 
 @testset "Particle Swarm" begin
     @testset "Particles" begin
-        p = Particle([1, 1], 1, 1)
-        move!(p, [0, 0], 0, [0, 0], [0, 0], [0, 0])
+        p = Particle([1, 1])
+        move!(p, [0, 0], 1, 0, 1, [0, 0], [0, 0], [0, 0])
         @test p.pos == [1, 1]
-        move!(p, [0, 0], 0, [1, 1], [0, 0], [0, 0])
+        move!(p, [0, 0], 1, 0, 1, [1, 1], [0, 0], [0, 0])
         @test p.pos == [1, 1]
-        move!(p, [0, 0], 1, [0, 0], [1, 1], [0, 1])
+        move!(p, [0, 0], 1, 1, 1, [0, 0], [1, 1], [0, 1])
         @test p.pos == [1, 0]
-        move!(p, [0, 0], 0, [0, 0], [0, 0], [1, 1])
+        move!(p, [0, 0], 1, 0, 1, [0, 0], [0, 0], [1, 1])
         @test p.pos == [0, 0]
     end
 end
