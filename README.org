@@ -1,0 +1,17 @@
+#+title: GPU accelerated PSO
+
+Implementation of Particle Swarm Optimization using [[https://juliagpu.org/][CUDA.jl]]. 
+
+* Dependencies
+
+The whole repository is a Julia project, so to get all Julia dependencies, it is enough to run
+
+#+begin_src julia
+julia> cd("path/to/project")
+pkg> activate .
+pkg> instantiate
+#+end_src
+
+Other than these, to run CUDA code, the GPU drivers and the [[https://developer.nvidia.com/cuda-toolkit][Nvidia Toolkit]] must be installed.
+
+Additionally, some ~C++~ examples use the [[https://www.boost.org/][Boost]] library.

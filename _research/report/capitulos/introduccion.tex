@@ -1,0 +1,76 @@
+\chapter{Introducción}
+\label{cap:intro}
+
+\section{Motivación}
+
+Gran cantidad de problemas como simulación del clima, análisis de genomas,
+investigación en nuevas energía o aprendizaje de máquina \cite{Pacheco2011}
+requieren gran poder computacional para ser resueltos. Por lo que mayor poder
+de cómputo disponible aumenta la cantidad de problemas tratables. En el pasado,
+esto se lograba aumentando la velocidad y densidad de transistores en los
+procesadores. Sin embargo, esta técnica está llegando a un límite físico.
+
+Así que en los últimos años, para obtener un aumento en el rendimiento se usan
+sistemas paralelos. Estos pueden variar desde un procesador con varios núcleos
+hasta redes de computadores. El tener varias unidades de cómputo permite
+obtener mejoras de rendimiento a pesar de no tener procesadores más veloces.
+
+Pero hacerlo introduce problemas concernientes a la coordinación de todas las
+partes. En este trabajo se hará el análisis necesario para paralelizar la
+solución a un problema particular, prestando atención a que las técnicas usadas
+pueda ser útiles en problemas que requieran otra infraestructura.
+
+\section{Metas}
+
+Existe una gran variedad de técnicas de optimización paralelizables, varios
+métodos de paralelización, cada uno con ventajas y desventajas, y aún más
+variedad de problemas que podrían beneficiarse de esas optimización. Por
+restricciones externas, en este trabajo se considera la heurística de
+Optimización por Enjambre de Partículas, paralelización por medio de GPUs y
+como problema de estudio la logística de cadenas de suministros.
+
+Aún así, la meta principal de este trabajo es que el proceso documentado aquí
+sea útil para replicar el resultado en problemas similares.
+
+Las contribuciones de este trabajo son:
+
+\section{Objetivo}
+
+El objetivo general de este trabajo consiste en analizar que tanto se puede
+mejorar el rendimiento de una heurística de optimización dada por medio de
+paralelización y analizar su desempeño en un problema en particular.
+
+Los objetivos particulares consisten en
+
+\begin{itemize}
+  \item Implementar secuencialmente la heurística
+  \item Determinar los puntos de paralelización de la técnica existente
+  \item Implementar la heurística de forma paralela
+  \item Analizar las mejoras en tiempos de la implementación paralela
+  \item Analizar las mejoras en calidad de la implementación paralela
+\end{itemize}
+
+\section {Organización}
+
+Este trabajo se desarrolla en seis capítulos, incluyendo esta introducción, y
+una sección adicional de apéndices que complementan la investigación.
+
+En \cref{cap:paralelism} se presentan los diferentes tipos de paralelismo,
+así como sus ventajas, restricciones y problemáticas. Además se estudian
+algunas técnicas comunes para paralelizar algoritmos secuenciales. En
+\cref{cap:bpso} se presenta la heurística a paralelizar y se usan los criterios
+presentados en \cref{cap:paralelism} para proponer una versión paralelizada.
+En \cref{cap:supply}, se presenta el problema de cadenas de suministros. Se
+incluye su formalización como problema de optimización, se mencionan las
+dificultades para obtener soluciones óptimas y las técnicas usadas para
+resolverlo, incluyendo BPSO. En \cref{cap:results} se realiza una comparación
+cualitativa entre los recursos y la calidad de las soluciones tanto de la
+solución secuencial como la solución paralela. Se concluye el trabajo con
+el \cref{cap:conc}, donde se exponen los comentarios finales y se sugiere el
+trabajo a realizar en próximas investigaciones.
+
+Se anexan además varios apéndices. En el \cref{app:gpus} se describe la
+arquitectura de las tarjetas CUDA de Nvidia, así como conceptos básicos de
+CUDA y \texttt{nvcc}. El \cref{app:julia} es una guía de alto nivel del
+lenguaje Julia, así como algunas bibliotecas útiles. En el \cref{app:linprog}
+se da un breve repaso de programas lineales y del método Simplex.

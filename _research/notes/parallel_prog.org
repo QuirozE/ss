@@ -1,0 +1,31 @@
+#+title: An Introduction to Parallel Programming
+#+author: Peter Pacheco
+
+* Why parallel programming?
++ From 80s to the mid 2000s single core processor speed increased ridiculously fast
++ Physical limitations prevent same techniques from being used now
++ Now, multi-core architectures are being used to, but the require special software to take full advantage
+
+** Why do we need even more power?
++ Depends on the task. For some tasks, the current single core performance might be good enough.
++ For some tasks, more power means more problems are treatable, faster discoveries and progress
+  + Drug discovery: protein folding, custom made drugs
+  + Physical simulations: engineering design, climate modeling
+  + Massive data processing: DNA, high energy physics, data mining
+
+** Why use parallel and not something else?
++ Speed implies energy, which dissipates into heat, which destroys circuits.
++ Speed can't increase any more, but density can, i.e. quantity over quality. It is a simple alternative.
++ Not ideal, but good enough for most cases
+
+** Why do we need to create special software?
++ Direct parallelization often is inefficient. Taking advantage of parallelization often requires to develop new algorithms.
+
+** What is required for parallel software?
++ Work can be divided by task or by data
++ Parallelization requires splitting the work evenly (load balancing)
++ Also communication to report results.
++ And finally coordination (synchronization) , as some tasks might depend on other tasks
++ So parallel programs are normally more complex than their sequential counterpart
+
+* Parallel Systems

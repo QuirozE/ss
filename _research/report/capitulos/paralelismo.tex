@@ -1,0 +1,469 @@
+\chapter{Paralelismo}
+\label{cap:paralelism}
+
+En este capítulo se van a explorar diferentes clasificaciones de arquitecturas
+paralelas y sus peculiaridades, además de dar algunos criterios para clasificar
+los problemas y decidir la mejor manera de crear una solución paralela a un
+problema en particular.
+
+\section{Tipos de arquitectura}
+
+Tradicionalmente se dividen los tipos de sistemas en base a como tratan el
+flujo de datos y de instrucciones. Esto se conoce como \iem{taxonomía de Flynn}
+
+\begin{itemize}
+  \item \iem{SISD} (Single Instruction Single Data): sistemas sin paralelismo.
+
+  \item \iem{SIMD} (Single Instruction Multiple Data):
+    sistemas que pueden aplicar una operación a vectores o arreglos de datos en
+    una unidad de tiempo
+
+  \item \iem{MIMD} (Multiple Data Multiple Instructions):
+    sistemas donde cada unidad de procesamiento es independiente.
+\end{itemize}
+
+\subsection{Sistemas \textit{SISD}}
+
+Contrario a su nombres, estos modelos pueden tener ciertos mecanismos
+paralelos. Se suelen implementar como una optimizaciones a nivel de hardware,
+por lo no se tiene el control a nivel del software. Por esto no se consideran
+sistemas paralelos en la taxonomía de Flynn.
+
+Sin embargo, paralelizar secciones de código previamente secuenciales, altera
+el orden de ejecución del programa. Esto se tiene que tomar en cuenta al
+diseñar sistemas paralelos, se tenga o no el control sobre el mecanismo.
+
+\subsubsection{\emph{Instruction Level Paralelism}}
+
+\iem{ILP} consiste en paralelizar la ejecución de las instrucciones de un mismo
+programa.
+
+\begin{itemize}
+  \item \iem{pipelining}
+
+    Consiste en dividir una instrucción en pasos atómicos. Por ejemplo
+    sacar los datos de memoria, revisar el tipo de operación, aplicar la
+    operación, guardar los datos resultantes, entre otros.
+
+    Cada paso se realiza en una sección de la unidad de control. Cuando una
+    sección termina de procesar su paso, empieza a procesar la siguiente
+    instrucción, independientemente si la instrucción anterior se haya
+    terminado de ejecutar, simulando una \emph{línea de ensamblaje}. Si el
+    procesamiento se divide en $k$ pasos, se podrían procesar hasta $k$
+    instrucciones a la vez.
+
+  \item \iem{multiple issue}
+
+    La unidad de control posee varias copias de las mismas secciones
+    (i.e. \emph{ALUs}) que pueden ser usadas en paralelo. Para coordinar esas
+    secciones, es necesario tener algún tipo de planificación. Esto se suele
+    hacer como una optimización al compilar un programa o durante la ejecución
+    a nivel de hardware.
+\end{itemize}
+
+En todos casos, no siempre es posible saber la secuencia de instrucciones, pues
+la siguiente instrucción puede depender del resultado de la actual. Para esto
+usan métodos de \iem{especulación}. Basado en análisis estadísticos, durante
+la planificación se adivina la siguiente instrucción. En caso se ser errónea,
+se desecha el resultado y se calcula la versión correcta.
+
+\subsubsection{\emph{Thread Level Paralelism}}
+
+Una alternativa a especular es usar una abstracción más alta. \iem{TLP}
+mantiene en ejecución diferentes programas, alternando qué programa usa el
+procesador.
+
+El mecanismo para cambiar el programa ejecutándose se denomina \emph{hardware
+paralelism} (paralelismo de hardware). Para que se note una mejora en el
+desempeño, el costo fijo de cambiar de proceso debe ser menor a la ganancia
+dada por el paralelismo, que incrementa entre mayor sean los datos a procesar.
+Esto hace que estas optimizaciones no sean útiles en problemas pequeños.
+
+\subsection{Sistemas \emph{SIMD}}
+
+Tienen una única unidad de control con varias unidades aritmético lógicas
+(\emph{ALU}). Al recibir la instrucción, la unidad de control reparte los
+datos para que se aplique la operación en paralelo. Este tipo de paralelismo se
+denomina \iem{paralelismo de datos}.
+
+Deben tener registros capaces de guarda vectores y operaciones optimizadas para
+leer y escribir de los elementos en estos registros. Todas las operaciones son
+síncronas y totalmente uniformes. Además de operaciones sobre los elementos,
+suelen haber operaciones que actúan sobre los vectores sin tener que acceder a
+cada elementos, como obtener la longitud del vector.
+
+No suelen requerir modificaciones sustanciales a código existente, por lo que
+su uso se puede automatizar, y suelen resultar en mejoras notables. Por otra
+parte, tienen una variedad limitada de operaciones disponibles, usar datos
+irregulares provoca que unidades desperdicien ciclos de trabajo, y no es una
+arquitectura escalable.
+
+En general, cada núcleo de un \iem{CPU} cuenta con instrucciones que permiten
+este tipo de operaciones. Sin embargo, los \emph{CPUs} no se consideran
+sistemas \emph{SIMD}, ya que tener varios núcleos le dan características
+\emph{MIMD}.
+
+Las unidades de procesamiento gráfico (\iem{GPU}) también tienen este tipo de
+funcionalidad. Además, como las imágenes suelen ocupar mucha memoria, tiene
+memoria de gran tamaño optimizada para \emph{paralelismo de hardware}.
+Los \emph{GPUs}, tampoco son exclusivamente un sistema \emph{SIMD}, ya que
+suelen tener decenas de núcleos.
+
+\subsection{Sistemas \textit{MIMD}}
+
+Cada unidad de procesamiento es completamente independiente. Las operaciones no
+son uniformes ni síncronas. Para coordinar sus acciones necesitan, las
+unidades necesitan comunicarse. Los dos métodos más comunes son usar bloques de
+memoria compartida, que se usa implícitamente para comunicar las acciones a
+otros procesos, o explícitamente mandar mensajes por medio de un sistema de
+red.
+
+\subsubsection{Sistemas de memoria compartida}
+
+Se suele compartir memoria de dos maneras. Se puede tener un bloque de memoria
+global y cada unidad tiene acceso a ella. Esto es simple pero potencialmente
+lento. Este tipo se sistemas se denominan \iem{UMA} (Universal Memory Access).
+Una alternativa es que cada unidad tenga un bloque de memoria, y las demás
+unidades tenga acceso a ese bloque. Esto hace que la memoria \emph{local}
+de cada proceso sea de rápido acceso, aunque acceder a la memora de otra unidad
+sea más costoso. Esto se denomina \iem{NUMA} (Non Universal Memory Access).
+
+\begin{itemize}
+\item \iem{UMA} (Universal Memory Access)
+
+  Los sistemas \emph{UMA} son más predecibles, por lo que son más sencillos de
+  programar. Pero no son escalables, pues hay un límite para el tamaño de la
+  memoria global.
+
+  Sistemas como estos son los \emph{CPUs} multi-núcleo. Cada núcleo es
+  unidad independiente que comparten la \emph{RAM} o algún espacio de disco
+  duro.
+
+\item \iem{NUMA} (Non Universal Memory Access)
+
+  Los sistemas \emph{NUMA} son más baratos y escalables, pues para
+  añadir más memoria basta con añadir una nueva unidad. Son menos predecibles
+  al tener tiempo variable de acceso a memoria.
+
+\end{itemize}
+
+En ambos casos, el mecanismo para compartir la memoria puede ser un cuello de
+botella.
+
+La topología más sencilla para esto se conoce como un \iem{bus}. Todas
+las unidades están conectadas a un canal de comunicación principal. Solo una
+unidad puede acceder a la memoria compartida al mismo tiempo. Esto es
+restrictivo pero barato. Para sistemas pequeños puede ser lo más eficiente.
+Claramente no es escalable, pues entre más unidades haya mayor la probabilidad
+de contención por en \emph{bus} aumenta.
+
+Para sistemas más grandes se suele usar un \iem{crossbar}. Esto requiere
+\iem{switches}. Cada unidad de procesamiento y de memoria cuenta con un
+\emph{bus}. Y cada \emph{bus} está conectado a los demás por medio de un
+\emph{switch}, de tal forma que cada unidad de procesamiento solo esté
+conectada a una unidad de memoria a la vez. Así, solo hay contención si dos
+unidades quieren acceder al mismo bloque de memoria al mismo tiempo. Esto es
+eficiente, pero los \emph{switches} agregan un costo fijo que puede ser
+demasiado para sistemas pequeños.
+
+Independientemente de las conexiones, un problema en los sistemas compartidos
+es la \emph{coherencia de caché}. El \iem{caché} es memoria de alta velocidad
+dentro de las unidades de procesamiento. Sirve para almacenar temporalmente los
+datos que se están usando para evitar consultas a la memoria global. Es una
+optimización a nivel de \emph{hardware}, por lo que no se tiene control sobre
+como se usa.
+
+El problema en sistemas paralelos llega cuando varias unidades procesan los
+mismo datos en memoria. Al cada uno tener una copia de los datos en su
+\emph{caché}, estos pueden quedar des-actualizados si otra unidad los modifica.
+El problema de mantener el \iem{caché} de todas las unidades actualizado se
+denomina \iem{coherencia de caché}.
+
+Una técnica sencilla para sistemas basados en \emph{buses} es \iem{snooping}.
+Como todos los datos pasan por el \emph{bus} común, se puede interceptar los
+cambios en memoria. Para esto, basta con que una unidad mande una señal cuando
+modifique un valor. De esta manera, las demás unidades sabrán que su copia
+local del valor ya no es válida.
+
+Esta técnica no es escalable para sistemas que usen \emph{switches}, generar
+demasiado tráfico. Una alternativa es \iem{caché basado en directorios}. La
+idea es que las unidades mantengan una tabla distribuida donde indiquen que
+unidad posee que datos en su caché. Así, cuando una unidad modifique un valor,
+puede consultar esa tabla para solo enviar las notificaciones a las unidades
+que lo posean.
+
+\subsubsection{Sistemas distribuidos}
+
+El tipo más común de sistema distribuido son los \iem{clusters} de
+computadoras. Estas son unidades independientes conectadas a través de una
+red. Las unidades pueden tener características de hardware muy diferentes, e
+incluso estar físicamente separadas. Por lo mismo, estos sistemas son más
+escalables. Aunque ser tan heterogéneos hace que sean menos predecibles.
+
+A pesar de que no compartan memoria, usan sus conexiones para mandar mensajes
+y coordinar sus acciones. Hay dos tipos principales de conexiones. En las
+\iem{conexiones directas}, cada \emph{switch} está conectado a una unidad de
+procesamiento, a manera de proxy. Por lo que las conexiones se pueden pensar
+entre unidades de procesamiento directamente. Ejemplos de topologías de este
+tipo son \iem{anillos}, \iem{toros} o \iem{hipercubos}. En las \iem{conexiones
+  indirectas}, los \emph{switches} pueden estar conectados a unidades o a otros
+\emph{switches}. Un ejemplo de esto es el \emph{crossbar} mencionado
+anteriormente.
+
+Al ser más robustos, escalables y baratos que los sistemas de memoria
+compartida, los sistemas distribuidos suelen usarse cuando la cantidad de
+datos a procesar es masiva. A pesa de su utilidad, en este trabajo se
+profundiza más en los sistemas de memoria compartida, al ser la
+infraestructura disponible. Así que no se profundizará más al respecto de los
+sistemas distribuidos.
+
+\section{Programas paralelos}
+
+La paralelización es una optimización. Así que normalmente se quiere
+paralelizar un programa ya existente. Esto requiere identificar secciones de
+código donde la carga de trabajo puede ser dividida entre varias unidades.
+Pero al dividir el trabajo, cada unidad queda aislada. Si parte de la ejecución
+depende del trabajo de otra unidad, es necesario que haya comunicación. En
+sistemas de memoria compartida, la comunicación es implícita al modificar
+secciones compartida de la memoria. Naturalmente, esta comunicación genera
+problemas únicos.
+
+Uno de ellos es una \iem{condición de carrera}. Esto sucede cuando dos
+unidades modifican el valor de una variable compartida, y luego usan ese
+valor en computaciones posteriores. El valor final de la variable sería el que
+le asigne la última unidad en verificarla. Lamentablemente, debido a \emph{ILP}
+y a \emph{TLP}, el orden y la velocidad de ejecución de las instrucciones
+puede cambiar en cada ejecución. Esto significa que correr el mismo programa
+varias veces, con los mismo argumentos, daría resultados diferentes.
+Se denomina una \emph{carrera} porque el resultado de la ejecución depende de
+que unidad ejecute más rápido su código.
+
+Una solución a este problema son los \iem{mutex}, o candados de exclusión
+mutua. Son mecanismos (pueden ser a nivel hardware o software) que solo
+permiten la ejecución de cierto bloque de código a una unidad a la vez. Estas
+secciones se denominan \iem{secciones críticas}. Claramente, una sección
+crítica no se ejecuta en paralelo, así que es importante evitarlas, y cuando
+se usan, que sean lo más breves posibles. Una alternativa a esto son los
+\iem{semáforos}. Tienen un funcionamiento similar a los \emph{mutex}, pero
+pueden permitir más de un permiso a la vez, entre otras cosas. Otra solución
+a más alto nivel, común en bases de datos, son las \iem{transacciones}. Durante
+una transacción, si alguna de las operaciones no se puede ejecutar, por haber
+encontrado un \emph{mutex} o algún otro motivo, todas las operaciones se
+revierten. Esto evita que la memoria compartida quede en un estado no
+determinista.
+
+Otro problema único de la paralelización es la \iem{sincronización}. Esto
+consiste en que cada unidad espere en un punto dado hasta que todas las demás
+unidades lleguen a este punto. Esto requiere comunicación entre todas las
+unidades. La implementación se suele denominar una \iem{barrera}, y puede
+lograrse con varios \emph{semáforos}.
+
+\subsection{Métricas de desempeño}
+
+Al ser la paralelización una optimización, es muy importante medir cuál es
+la mejora real obtenida.
+
+\subsubsection{Incremento y Eficiencia}
+
+Si se divide el trabajo en $p$ partes, en el mejor caso se tendría una mejora
+de $p$ veces la velocidad inicial. Es decir $t_{p} = \frac{t_{s}}{p}$. Esto no
+suele pasar, ya que lidiar con los problemas de exclusión, comunicación y
+sincronización suelen ser costosos. Así que despejando de la fracción anterior,
+se define el \iem{speedup} como la \cref{eq:speed}
+
+\begin{equation}
+  \label{eq:speed}
+s = \frac{t_{s}}{t_{p}}
+\end{equation}
+
+Así, el mejor caso estaría acotado por $s = p$. Entre más incremente $p$, se
+esperaría que $s$ se acerque más y más a $p$. Es decir
+
+\[
+\lim_{p \to \infty}{\frac{s}{p}} = \frac{t_{s}}{pt_{p}} \to 1
+\]
+
+Este valor $e = \frac{s}{p}$ se suele denominar \iem{eficiencia}. Hay que notar
+que estos valores no solo dependen de $p$. Es normal observar que con mayor
+cantidad de datos, el \emph{speedup} y la \emph{eficiencia} incrementen. Esto
+se debe a que la ganancia por paralelización incrementa, mientras que el costo
+de comunicación, exclusión y sincronización se mantienen relativamente
+constantes.
+
+\subsubsection{Ley de Amdahl}
+
+Una observación importante es que solo se podrá obtener una mejora en las
+secciones del programa que puedan ser paralelizables. Esto se puede expresar
+con la \cref{eq:amdahl}
+
+\begin{equation}
+  \label{eq:amdahl}
+  t_{p} = rt_{s} + \frac{1-r}{p} t_{s} = t_{s}(r + \frac{1-r}{p})
+\end{equation}
+
+donde $r$ es el porcentaje del código que no es paralelizable. Con esta nueva
+definición, la cota para la definición de \emph{speedup} se puede reescribir
+como
+
+\[
+s = \frac{t_{s}}{t_{p}p} = \frac{t_{s}}{t_{s}(r + \frac{1-r}{p}}
+= \frac{1}{r + \frac{1-r}{p}}
+\]
+
+Esto significa, que sin importar cuantas unidades extra se añadan, nunca se
+obtendrá una mejora mayor a $\frac{1}{r}$. Esta ley toma su nombre de la
+primera persona que la describió formalmente, Gene Amdahl.
+
+\subsubsection{Escalabilidad}
+
+En secciones anteriores se mencionó que el costo para comunicación, exclusión
+y sincronización suele ser constante relativamente al número de unidades. Esto
+no es del todo cierto. Cuando un sistema tiene esta propiedad se dice que es
+\iem{fuertemente escalable}. Formalmente, si un programa paralelo tiene una
+eficiencia $e$ usando $p$ unidades, esta eficiencia no disminuirá
+al incrementar $p$, sin importar el tamaño de la entrada. Una variante de esta
+propiedad es un sistema \iem{débilmente escalable}. En este caso, al
+incrementar las unidades por un factor de $k$, la eficiencia se puede mantener
+únicamente incrementando el tamaño de la entrada por algún factor a lo más
+lineal sobre $k$.
+
+\subsection{Consejos generales}
+
+Paralelizar una solución depende de la solución en particular. No hay una
+proceso metódico para lograrlo. Aun así, existen diferentes técnicas. Una de
+ellas es la \iem{metodología de Foster}. Esta indica que se puede dividir el
+proceso en cuatro etapas.
+
+\begin{enumerate}
+\item Partir
+
+  Consiste en repartir las tareas. En otras palabras, identificar las secciones
+  paralelizable.
+
+\item Comunicar
+
+  Identificar la información a comunicar entre las unidades, y los puntos donde
+  es necesario que lo hagan.
+
+\item Aglomerar
+
+  Identificar tareas extra donde es necesario unir resultados en un resultado
+  común y el mecanismo a usar para ello.
+
+\item Mapear
+
+  Asignar las tareas de aglomeración del paso anterior.
+\end{enumerate}
+
+En cada paso, hay que procurar balancear la carga de trabajo y minimizar la
+comunicación. Esto para tener ejecuciones lo más homogéneas y con menos
+desperdicio de recursos posible.
+
+La paralelización es una optimización que introduce un costo fijo extra. Como
+tal, puede ser que un programa perfectamente paralelizable no genera ganancias
+notables. Hay que determinar si la ganancia a obtener vale la pena el esfuerzo
+a realizar. A priori esto puede no ser tan claro. Pero Pancake
+\cite{Pancake1996} propone algunas reglas que a grandes rasgos permitan
+determinar si vale la pena dar una solución paralela a un problema.
+
+\begin{itemize}
+\item Usar el desempeño de la versión secuencial como base para estimar las
+  ganancias.
+
+\item Por la ley de Amdahl, no vale la pena paralelizar un programa con una
+  fracción paralelizable menor a 0.95.
+
+\item Dependiendo del problema en particular, hay que estimar como aumentar
+  el tamaño de la entrada afecta la eficiencia.
+
+\item La mejora real siempre será peor a la mejora teórica.
+
+\item Si la naturaleza del problema no es muy compatible con la infraestructura
+  disponible, probablemente no valga la pena.
+
+\item Un problema que requiera poca comunicación tendrá un desempeño decente en
+  cualquier sistema. Un sistema con media o alta comunicación probablemente
+  solo sea decente en un sistema \emph{SIMD}.
+
+\end{itemize}
+
+Además de estos consejos generales, provee algunos consejos más específicos,
+dependiendo del tipo de problema. Se dividen en cuatro tipos
+
+\begin{itemize}
+\item Paralelismo perfecto
+
+  Únicamente requieren dividir la carga de trabajo. Ningún intercambio de
+  información entre unidades es necesario. Estos problemas son fáciles de
+  paralelizar y suelen obtener ganancias considerables.
+
+  Tendrían resultados decentes en sistemas \emph{MIMD}, y si se pueden adaptar
+  las dimensiones de los datos, también en sistemas \emph{SIMD}.
+
+\item Paralelismo de \emph{pipelining}
+
+  Hay que aplicar cierto procesamiento a todos los datos, y diferentes etapas
+  del procesamiento requieren, potencialmente todos, los datos de etapas
+  anteriores. Al igual que el \emph{ILP}, la manera más sencilla de paralelizar
+  esto es asignar una etapa por unidad y dividir los datos en grupos. Cada
+  unidad procesa un a la vez grupo, y cuando termine manda la información a la
+  siguiente unidad.
+
+  Esto puede alcanzar un rendimiento decente en sistemas \emph{MIMD}, siempre y
+  cuando sea posible distribuir la carga de manera efectiva, para que cada
+  unidad tarda aproximadamente el mismo tiempo en procesar un grupo. De otra
+  manera, el retraso de una unidad podría alentar demasiado todo el programa.
+
+  También sería posible adaptarlo a un sistema distribuido, siempre y cuando la
+  comunicación sea suficientemente rápida.
+
+\item Paralelismo síncrono
+
+  Hay que aplicar cierto procesamiento a los datos, pero cada paso debe
+  aplicarse simultáneamente a todos los datos, por lo que no se pueden dividir
+  en grupos. En este caso, cada unidad aplicar todos los pasos a una sección
+  de los datos. Para esto, las unidades se tienen que sincronizar y comunicar
+  datos relevantes.
+
+  Un problema podría ser que diferentes regiones de los datos requieran una
+  intensidad diferente dependiendo de sus valores. Si no se puede balancear
+  esta carga, el costo fijo de la paralelizar sería demasiado elevado.
+
+  Si se pueden adaptar las operaciones vectores, tendría un desempeño decente
+  en un sistema \emph{SIMD}. También en un sistema distribuido, siempre y
+  cuando no se requiera mucha comunicación. Se desempeñaría pobremente en
+  cualquier otro tipo de infraestructura.
+
+\item Paralelismo vagamente síncrono
+
+  Similar al paralelismo síncrono, pero los datos que necesitan ser procesados
+  en el paso siguiente dependen totalmente del paso anterior. Y no es posible
+  predecir estas dependencias a priori. Por lo que en general estos problemas
+  requieren mucha comunicación y no es posible balancear la carga de las
+  unidades.
+
+  Probablemente no valga la pena paralelizarlo, al menos que la comunicación
+  entre diferentes unidades sea mínima.
+
+  Probablemente solo desempeñe decentemente en un sistema \emph{MIMD}. Si hay
+  poca comunicación y una rápida conexión, probablemente también en un sistema
+  distribuido.
+
+\end{itemize}
+
+\section{Resumen}
+
+Hay diferentes tipos de arquitectura para sistemas paralelos. Tienen
+características particulares que las hacen más aptas para ciertos tipos de
+problemas. Determinar cuál es la mejor arquitectura para un problema dado no es
+sencillo. Requiere conocimiento profundo del problema en particular. Además de
+tomar muchas medidas del desempeño actual, y usarlas para aproximar las
+posibles al paralelizar.
+
+Independientemente de la mejora en desempeño, hay que tomar en cuenta que
+paralelizar un programa introduce nuevos tipos de problemas. Esto podría
+resultar en más tiempo de desarrollo y frustraciones al programar.
+
+A pesar de haber tantas complicaciones para decidir si vale la pena paralelizar
+un problema dada la infraestructura disponible, hay una gran cantidad de
+consejos empíricos que se pueden tomar en cuenta para facilitar la decisión.

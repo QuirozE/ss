@@ -1,7 +1,54 @@
 #+title: GPU accelerated discrete optimization in Julia
 
 * Todos
-** Social service meeting <2021-07-08 Thu 15:00 +1w>
+** Optimization problems
+*** PROJ Supply Chain [1/2]
+**** DONE Write somo intro to Supply Chains
+CLOSED: [2021-08-25 Wed 20:21]
+**** TODO Learn Linear Programming [1/3]
++ [X] Read book
++ [ ] Recreate ~JUMP~ examples
++ [ ] Try to adapt PSO
+
+*** PROJ PSO [0/2]
+**** TODO Write PSO notes [/]
++ [ ] Read Yang's chapter on the subject
+**** TODO Sequential implementation [1/2]
++ [X] Create toy implementation
++ [ ] Make notes
+** Parallel computing
+*** PROJ Parallel Theory [1/2]
+**** DONE Pancake's paper
+CLOSED: [2022-02-13 Sun 22:07] SCHEDULED: <2022-02-14 Mon 08:00>
+**** TODO Pacheco [3/5]
+SCHEDULED: <2022-02-13 Sun 14:00>
+:LOGBOOK:
+CLOCK: [2022-02-13 Sun 22:06]
+CLOCK: [2022-02-13 Sun 21:15]--[2022-02-13 Sun 21:46] =>  0:31
+CLOCK: [2022-02-13 Sun 20:44]--[2022-02-13 Sun 21:10] =>  0:26
+CLOCK: [2022-02-13 Sun 20:12]--[2022-02-13 Sun 20:38] =>  0:26
+CLOCK: [2022-02-13 Sun 19:32]--[2022-02-13 Sun 19:58] =>  0:26
+CLOCK: [2022-02-13 Sun 15:47]--[2022-02-13 Sun 16:12] =>  0:25
+CLOCK: [2022-02-13 Sun 15:16]--[2022-02-13 Sun 15:41] =>  0:25
+CLOCK: [2022-02-13 Sun 14:19]--[2022-02-13 Sun 14:45] =>  0:26
+CLOCK: [2022-02-13 Sun 13:49]--[2022-02-13 Sun 14:14] =>  0:25
+:END:
++ [X] Chapter 2
++ [X] Writes an introduction to the different types of parallel computing
++ [X] Write more in depth notes for a MDMI GPUs architecture
++ [ ] Write about techniques for dealing with parallel programs (connects with Pancake's paper)
+
+** Julia
+*** PROJ Julia basics [2/2]
+**** DONE Julia intro
+CLOSED: [2021-07-08 Thu 15:22]
+**** DONE Julia type system
+CLOSED: [2021-07-08 Thu 15:22]
+*** PROJ Sequential optimization [/]
+**** TODO Nassar
++ [ ] Recreate [[youtube:https://youtu.be/S5R8zXJOsUQ][her]] optimization tips
+**** TODO Bauman
++ [ ] Recreate [[https://juliaacademy.com/p/parallel-computing][Bauman]]'s code for SIMD optimization
 
 ** `CUDA C`
 *** PROJ CUDA by Example [0/3]
@@ -20,72 +67,7 @@
 5. [ ] Add `Magick` or some image library to do real rendering.
 **** TODO CUDA.jl [/]
 + [ ] Review Documentation
-** Julia
-*** PROJ Julia basics [2/2]
-**** DONE Julia intro
-CLOSED: [2021-07-08 Thu 15:22]
-**** DONE Julia type system
-CLOSED: [2021-07-08 Thu 15:22]
-*** PROJ Sequential optimization [/]
-**** TODO Nassar
-+ [ ] Recreate [[youtube:https://youtu.be/S5R8zXJOsUQ][her]] optimization tips
-**** TODO Bauman
-+ [ ] Recreate [[https://juliaacademy.com/p/parallel-computing][Bauman]]'s code for SIMD optimization
-
-** Parallel computing
-*** PROJ Parallel Theory [1/2]
-**** DONE Pancake's paper
-CLOSED: [2021-07-08 Thu 15:22]
-**** TODO Pacheco [2/4]
-+ [X] Chapter 2
-+ [ ] Chapter 3
-+ [X] Writes an introduction to the different types of parallel computing
-+ [ ] Write more in depth notes for a MDMI GPUs architecture
-
-** Optimization problems
-*** PROJ Distance in graphs [0/4]
-**** TODO BFS [/]
-+ [-] Finish *BFS* correctness proof
-+ [ ] Toy sequential implementation
-**** TODO Djikstra [/]
-+ [ ] Write notes for Djikstra's algorithm
-**** TODO Bellman-Ford [/]
-+ [ ] Write notes for Bellman-Ford's algorithm
-**** TODO General conceptual diagram for distance problems
-*** PROJ Game Theory [/]
-**** TODO Write some intro to game theory
-*** PROJ PSO [0/2]
-**** TODO Write PSO notes [/]
-+ [ ] Read Yang's chapter on the subject
-**** TODO Sequential implementation [1/2]
-+ [X] Create toy implementation
-+ [ ] Make notes
-*** PROJ Supply Chain [1/2]
-**** DONE Write somo intro to Supply Chains
-CLOSED: [2021-08-25 Wed 20:21]
-**** TODO Learn Linear Programming [1/3]
-SCHEDULED: <2021-08-21 Sat 19:30>
-:LOGBOOK:
-CLOCK: [2021-07-28 Wed 16:22]--[2021-07-28 Wed 16:51] =>  0:29
-CLOCK: [2021-07-28 Wed 14:27]--[2021-07-28 Wed 14:55] =>  0:28
-CLOCK: [2021-07-28 Wed 13:56]--[2021-07-28 Wed 14:21] =>  0:25
-:END:
-+ [X] Read book
-+ [ ] Recreate ~JUMP~ examples
-+ [ ] Try to adapt PSO
-
 ** CIMAT
-*** KILL Autonomous cars <2021-07-09 Fri 10:45> [2/2]
-CLOSED: [2021-07-09 Fri 15:12]
-**** KILL Review PD Controll code [0/2]
-CLOSED: [2021-07-09 Fri 15:12] SCHEDULED: <2021-07-08 Thu>
-+ [ ] Review and test code
-+ [ ] Research a little theory about PD control
-**** KILL Try Hayet's challenge [0/2]
-CLOSED: [2021-07-09 Fri 15:12] SCHEDULED: <2021-07-08 Thu>
-+ [ ] Test steering control code
-+ [ ] Try to improve it?
-
 *** DONE Parallel Thinking <2021-07-09 Fri 12:30> [0/0]
 CLOSED: [2021-07-18 Sun 21:41]
 **** DONE Review ~OpenMP~ example code [2/2]
@@ -105,19 +87,3 @@ CLOCK: [2021-07-15 Thu 11:35]--[2021-07-15 Thu 11:38] =>  0:03
 :END:
 + [X] Read Code
 + [X] Adapt code to my style
-*** Graduate studies event <2021-07-16 Fri 12:00-13:00>
-[[https://vc-conacyt.bluejeans.com/435087137][Link]]
-
-*** Open conferences
-<2021-07-12 Mon> <2021-07-13 Tue> <2021-07-14 Wed>
-<2021-07-15 Thu> <2021-07-16 Fri>
-
-[[https://veranos2021.eventos.cimat.mx/node/1622/][Full Schedule]]
-[[https://zoom.us/j/98513728805?pwd=ZW9lZUtyVTJidU45VTJNL1JpdU1YUT09][Link]]
-** JuliaConf 2021
-*** GPU programming in Julia <2021-07-20 Tue 09:00>
-*** Game development in Julia <2021-07-22 Thu 09:00>
-*** Solving differential equations in parallel on GPUs <2021-07-23 Fri 09:00>
-*** Package development<2021-07-24 Sat 09:00>
-*** Parse and broker messages with CombinedParsers<2021-07-25 Sun 09:00>
-*** Introduction to metaprogramming in Julia <2021-07-27 Tue 09:00>
