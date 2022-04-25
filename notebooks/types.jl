@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.5
+# v0.19.2
 
 using Markdown
 using InteractiveUtils
@@ -116,7 +116,7 @@ Sirven para juntar más tipos en una especie de registro. Son el análogo de `st
 La principal diferencia con las clases (y objetos) es que no se incluye la definición
 del comportamiento en su declaración. En Julia las funciones son independientes de los
 datos. Cada función puede tener diferentes muchas implementaciones, que se deciden en
-tiempo de ejecución con despcho múltiple. Es uno de los principios de diseño de Julia.
+tiempo de ejecución con despacho múltiple. Es uno de los principios de diseño de Julia.
 """
 
 # ╔═╡ 34d4ff4a-ce8e-4013-be0d-e1ca06de2fbc
@@ -259,7 +259,7 @@ begin
 		alf::Array{Char}
 		pos::Dict{Char, Int64}
 
-		function AffineCypher(key, alf, pod)
+		function AffineCypher(key, alf, pos)
 			if gcd(key[1], key[2]) != 1
 				error("Non-reversible affine transformation")
 			end
@@ -270,7 +270,7 @@ begin
 	function AffineCypher(key, alf)
 		pos = Dict()
 		for (i, letter) in enumerate(alf)
-			por[letter] = i
+			pos[letter] = i
 		end
 		CesarCypher(key, alf, pos)
 	end
@@ -391,8 +391,32 @@ end
 
 # ╔═╡ cf599ae9-0b11-44b0-8c02-4eec5a5fa462
 md"""
-## Tipos paramétricos
+## (In)Mutabilidad
+
+Por omisión, los `struct` son inmutables. Es decir, una vez creados ya no es posible 
+modificarlos. Es es una optimización, ya que los tipos inmutables son guardados en
+la pila de memoria, lo cuál hace su creación y manipulación más rápida.
 """
+
+# ╔═╡ e3bd369e-4dcf-4182-964e-14a44fc9de92
+c1.alf = []
+
+# ╔═╡ a8882c93-ab35-4da1-a8d3-2751503d67f7
+md"""
+Pero por más útil que sea la optimización, a veces es necesario modificar los valores
+internos de un tipos. Para esto basta con declararlo como `mutable struct`
+"""
+
+# ╔═╡ 226f4f55-b025-428d-bb43-c59c73b8ccaf
+mutable struct MutateMe
+	val
+end
+
+# ╔═╡ 19f4a8ca-81ec-4886-947c-390b74adc946
+k = MutateMe(5)
+
+# ╔═╡ ea948821-ea88-495e-bdfc-bbde0ad0d6fe
+k.val = 0
 
 # ╔═╡ 4275ebf5-1dac-4ae4-b4a6-6b037e09892d
 md"""
@@ -415,6 +439,21 @@ function cypher(cesar, letter)
 	new_pos = mod(cesar.pos[letter]-1+cesar.key, length(cesar.alf))+1
 	cesar.alf[new_pos]
 end
+
+# ╔═╡ 00000000-0000-0000-0000-000000000001
+PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+"""
+
+# ╔═╡ 00000000-0000-0000-0000-000000000002
+PLUTO_MANIFEST_TOML_CONTENTS = """
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.7.2"
+manifest_format = "2.0"
+
+[deps]
+"""
 
 # ╔═╡ Cell order:
 # ╟─81c186d0-988f-11eb-386a-cfc9c0478f55
@@ -455,4 +494,11 @@ end
 # ╟─3cef50fd-d4d6-448a-a6d4-4fad7692a02f
 # ╠═2df08c42-6ac6-4de9-b9ad-67907ad74854
 # ╟─cf599ae9-0b11-44b0-8c02-4eec5a5fa462
+# ╠═e3bd369e-4dcf-4182-964e-14a44fc9de92
+# ╟─a8882c93-ab35-4da1-a8d3-2751503d67f7
+# ╠═226f4f55-b025-428d-bb43-c59c73b8ccaf
+# ╠═19f4a8ca-81ec-4886-947c-390b74adc946
+# ╠═ea948821-ea88-495e-bdfc-bbde0ad0d6fe
 # ╟─4275ebf5-1dac-4ae4-b4a6-6b037e09892d
+# ╟─00000000-0000-0000-0000-000000000001
+# ╟─00000000-0000-0000-0000-000000000002
