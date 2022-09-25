@@ -1,20 +1,19 @@
-%--------- Document type, packages and other utils -------------
-%---------------------------------------------------------------
+% --------- Document type, packages and other utils -------------
+% --------------------------------------------------------------- I
 % I think (?) `twoside` is a default option for book
 \documentclass{book}
 
 % Page format
 \usepackage[left=3.4cm,top=2.5cm,right=2.6cm,bottom=2.5cm]{geometry}
 
-% setting Spanish for all captions
-% using uppercase numerals, as the font doesn't have lowercase ones
+% setting Spanish for all captions using uppercase numerals, as the
+% font doesn't have lowercase ones
 \usepackage[spanish,es-ucroman]{babel}
 
 % changing font to Arev Sans
 \usepackage{arev}
 
-% used to include images
-% \usepackage{graphicx}
+% used to include images \usepackage{graphicx}
 
 % extra math notation
 \usepackage{amsmath}
@@ -23,8 +22,7 @@
 \usepackage{amsthm}
 
 % nice looking algorithms
-\usepackage{algorithm}
-\usepackage{algpseudocode}
+\usepackage{algorithm} \usepackage{algpseudocode}
 
 \usepackage[suftesi]{frontespizio}
 
@@ -35,8 +33,7 @@
 \usepackage[spanish]{cleveref}
 
 % generate an index of technical terms
-\usepackage{imakeidx}
-\makeindex
+\usepackage{imakeidx} \makeindex
 
 % Bibliography with BibLatex
 \usepackage[style=alphabetic]{biblatex}
@@ -49,57 +46,55 @@
 % This overrides some formatting options
 \input{utils/format}
 
-% Algorithmicx doesn't support spanish, so the translations are manually made
+% Algorithmicx doesn't support spanish, so the translations are
+% manually made
 \input{utils/algoritmos}
 
-%-------- Document type and used packages End ------------------
-%---------------------------------------------------------------
-%--------------  Document start --------------------------------
-%---------------------------------------------------------------
+% -------- Document type and used packages End ------------------
+% ---------------------------------------------------------------
+% -------------- Document start --------------------------------
+% ---------------------------------------------------------------
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % preliminary info format
 \frontmatter
 
-%---------------- Cover ----------------------------------------
+% ---------------- Cover ----------------------------------------
 \include{portada/portada}
-%Se compila aparte y se junta con "gs".
+% Se compila aparte y se junta con "gs".
 
-%---------------------------------------------------------------
+% ---------------------------------------------------------------
 
-%------------------ Preliminary information --------------------
-%---------------------------------------------------------------
+% ------------------ Preliminary information --------------------
+% ---------------------------------------------------------------
 
-%\include{includes/jurado}
-%\include{includes/apoyo}
-%\include{includes/licencia}
-%\include{includes/dedicatoria}
-%\include{includes/gracias}
+% \include{includes/jurado}
+% \include{includes/apoyo}
+% \include{includes/licencia}
+% \include{includes/dedicatoria}
+% \include{includes/gracias}
 
 \tableofcontents
-%\listoffigures
-%\listoftables
-%\listofalgorithms
+% \listoffigures \listoftables \listofalgorithms
 
-%\include{includes/resumen}
-%\cleardoublepage
-%Resumen en inglés
-%\include{includes/summary}
-%\cleardoublepage
+% \include{includes/resumen}
+% \cleardoublepage Resumen en inglés
+% \include{includes/summary}
+% \cleardoublepage
 
-%------------------- Preliminary information End ---------------
-%---------------------------------------------------------------
+% ------------------- Preliminary information End ---------------
+% ---------------------------------------------------------------
 
 %%%%%%%%%%%%%
 % format for the main body of the book
 \mainmatter
-%------------------- Chapters ----------------------------------
-%---------------------------------------------------------------
+% ------------------- Chapters ----------------------------------
+% ---------------------------------------------------------------
 
-%Introduccion
+% Introduccion
 \include{capitulos/introduccion}
-%Paralelismo
+% Paralelismo
 \include{capitulos/paralelismo}
 % Paralelización
 \include{capitulos/bpso}
@@ -107,34 +102,35 @@
 \include{capitulos/suministros}
 % Resultados
 \include{capitulos/resultados}
-%Conclusiones
+% Conclusiones
 \include{capitulos/conclusiones}
 
-%------------------- Thesis body end ---------------------------
-%---------------------------------------------------------------
+% ------------------- Thesis body end ---------------------------
+% ---------------------------------------------------------------
 
-%------------------------- Appendix  ---------------------------
-%---------------------------------------------------------------
+% ------------------------- Appendix ---------------------------
+% ---------------------------------------------------------------
 
 \appendix
 \include{apendices/gpus}
 \include{apendices/julia}
 \include{apendices/linprog}
-%\include{apendices/graficas}
+% \include{apendices/graficas}
 
-%---------------------- Appendix end  --------------------------
-%---------------------------------------------------------------
+% ---------------------- Appendix end --------------------------
+% ---------------------------------------------------------------
 
 % index of technical words
 \printindex
 %%%%%%%%%%%%%
 % format for the extra sections of the book
 \backmatter
-% bibliography in BibLatex
-% don't enable without citations in the text
-\printbibliography[
-   heading=bibintoc,
-   title={Referencias}
-]
+% bibliography in BibLatex don't enable without citations in the text
+\printbibliography[ heading=bibintoc, title={Referencias} ]
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

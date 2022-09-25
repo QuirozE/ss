@@ -1,2 +1,98 @@
-\chapter{Paralelización de \emph{B-PSO}}
-\label{cap:bpso}
+\chapter{Paralelización de \emph{B-PSO}}\label{cap:bpso}
+
+\section{Optimización por Enjambre de Partículas}\label{sec:pso}
+
+La optimización por enjambre de partículas (\iem{PSO} por sus siglas en inglés)
+es una técnica de optimización para funciones contínuas fue
+desarrollada por Kennedy y Eberhart en 1995\cite{YANG201499}. Es parte de una
+familia más extensa de algoritmos de optimización llamados
+\iem{inteligencia de  enjambre}. Estos intentan imitar los cardúmenes de peces o
+las parvadas de aves en su manera de movilizarse para evitar depredadores.
+
+En PSO, se tiene una función objetivo, y un conjunto de partículas. Cada
+partícula tiene una posición, que representa una posible solución para la
+función objetivo, y una velocidad. En cada paso, cada partícula tiene una
+tendencia a moverse en dirección de la mejor partícula global y de su mejor
+posición individual histórica, además de tener cierto movimiento aleatorio.
+
+Puntualmente, si en un momento $t$, una partícula tiene posición $x^{t}$ y
+velocidad $v^{t}$, su velocidad al momento $t+1$ está dada por la
+\cref{eq:pso-vup}
+
+\begin{equation}\label{eq:pso-vup}
+  v^{t+1} = v^{t} + \epsilon_{0} c_{1} (x^{t} - x^{\star})
+  + \epsilon_{1}c_{2} (x^{t} - \mathbf{x}^{\star})
+\end{equation}
+
+donde $x^{\star}$ es la mejor posición alcanzada por$x$, $\mathbf{x}^{\star}$ es
+la mejor posición global actual, $c_{i}$ son constantes para determinar cuando
+influencia la mejor solución personal y global y $\epsilon_{i} \in {[0, 1]}^{n}$
+son vectores aleatorios.
+
+Con la velocidad actualizada, se puede actualizar la posición, dada por la
+\cref{eq:pso-xup}
+
+\begin{equation}\label{eq:pso-xup}
+  x^{t+1} = x^{t} + v^{t+1}
+\end{equation}
+
+El proceso de optimización consta de rondas. En cada una, las partículas se
+mueven. Las rondas terminan cuando se cumple algún criterio de optimización.
+Este puede ser un número fijo de rondas, un umbral conocido de valores deseados,
+o que las soluciones obtenidas ya no mejores después de cierta cantidad de
+rondas. Este proceso está descrito en el \cref{alg:pso}
+
+\begin{algorithm}
+  \caption[PSO]{Optimización por Enjambre del Partículas (PSO)}\label{alg:pso}
+  \begin{algorithmic}[1]
+    \Require{$f$ función objetivo, $n$ número de partículas, $c_{1}, c_{2}$}
+    \Ensure{Mejor posición encontrada $\mathbf{x}^{\star}$}
+    \Function{pso}{$f$, $n$, $c_{1}$, $c_{2}$}
+      \State{Iniciar $n$ soluciones $X$ para $f$ de manera uniforme}
+      \State{Iniciar mejores soluciones por partícula $X^{\star} \gets X$}
+      \State{Iniciar velocidades $V$ en cero}
+      \State{Encontrar mejoro solución inicial $\mathbf{x}^{\star}$}
+
+      \While{No se cumpla el criterio}
+        \ForAll{$i \in [1 .. n]$}
+          \State{Actualizar $V[i]$ de acuerdo a \cref{eq:pso-vup}}
+          \State{Mover $X[i]$ de acuerdo a \cref{eq:pso-xup}}
+          \State{Actualizar mejor posición $X^{\star}[i]$}
+        \EndFor{}
+        \State{Actualizar la mejor posición global $\textbf{x}^{\star}$}
+      \EndWhile{}
+      \Return{$\textbf{x}^{\star}$}
+    \EndFunction{}
+  \end{algorithmic}
+\end{algorithm}
+
+\section{PSO Binario}\label{sec:b-pso}
+
+En PSO la velocidad y posición deben tomar valores reales, por lo la técnica
+solo se puede usar para funciones continuas. Pero en la práctica muchos
+problemas de optimización están definidos sobre espacios discretos. Para lidiar
+con esto, los autores de la heurística posteriormente propusieron una variante
+del algoritmo que funciona sobre espacios binarios.
+
+Para esto, usan la función sigmoide (\cref{eq:sig}) para discretizar valores.
+
+\begin{equation}\label{eq:sig}
+  \sigma(x) = \frac{1}{1 + e^{-x}}
+\end{equation}
+
+Luego, para actualizar la entrada $x_{i}$ de la posición de una partícula, se
+usa la \cref{eq:bpso-xup}.
+
+\begin{equation}\label{eq:bpso-xup}
+  x^{t+1}_{i} =
+  \begin{cases}
+    1, r \leq \sigma(v^{t+1}_{i}) \\
+    0
+  \end{cases}
+\end{equation}
+
+Donde $r \in [0, 1]$ es un número aleatorio. El resto del procedimiento es el
+mismo que en el \cref{alg:pso}, solo reemplazando la \cref{eq:pso-xup} por
+\cref{eq:bpso-xup}.
+
+\section{Paralelización}
