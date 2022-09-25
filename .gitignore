@@ -316,8 +316,7 @@ TSWLatexianTemp*
 *~[0-9]*
 
 # auto folder when using emacs and auctex
-./auto/*
-*.el
+**/auto/*
 
 # expex forward references with \gathertags
 *-tags.tex
@@ -328,6 +327,9 @@ TSWLatexianTemp*
 ### LaTeX Patch ###
 # glossaries
 *.glstex
+
+**/*_*.tex
+**/ltximg
 
 ################################################################################
 #                              Operating systems                               #
