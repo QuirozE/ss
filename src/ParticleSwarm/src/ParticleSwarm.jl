@@ -24,10 +24,9 @@ far.
 mutable struct Particle
     pos
     velocity
-    p_best
     function Particle(pos)
         z = zeros(length(pos))
-        new(pos, z, pos)
+        new(pos, z)
     end
 end
 
@@ -62,7 +61,7 @@ activation(v, r) = if r < 1 / (1 + ℯ^v) 1 else 0 end
 
 """
 A swarm of particles. It also keeps track of the current global best and common
-particle values, like momentum and acceleration.
+particle values acceleration
 """
 mutable struct Swarm
     particles

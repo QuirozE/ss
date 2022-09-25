@@ -199,6 +199,4 @@ function is_valid(s, pos_vec, flow)
     true
 end
 
-include("ParticleSwarm.jl")
-
 end # module

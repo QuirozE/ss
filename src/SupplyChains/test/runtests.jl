@@ -1,4 +1,4 @@
-using Test, SupplyChains, SupplyChains.ParticleSwarm
+using Test, SupplyChains
 import SupplyChains:active_flow
 
 @testset "SupplyChains" begin
@@ -64,19 +64,5 @@ import SupplyChains:active_flow
         rf = [rand(1:10, dims[2]), rand(1:10, dims[3])]
         rand_fixed_cost = Cost(rf[1], rf[2], zm[1], zm[2], zm[3])
         @test rand_fixed_cost(o[1], o[2], full_flow) == sum(sum.(rf))
-    end
-end
-
-@testset "Particle Swarm" begin
-    @testset "Particles" begin
-        p = Particle([1, 1])
-        move!(p, [0, 0], 1, 0, 1, [0, 0], [0, 0], [0, 0])
-        @test p.pos == [1, 1]
-        move!(p, [0, 0], 1, 0, 1, [1, 1], [0, 0], [0, 0])
-        @test p.pos == [1, 1]
-        move!(p, [0, 0], 1, 1, 1, [0, 0], [1, 1], [0, 1])
-        @test p.pos == [1, 0]
-        move!(p, [0, 0], 1, 0, 1, [0, 0], [0, 0], [1, 1])
-        @test p.pos == [0, 0]
     end
 end

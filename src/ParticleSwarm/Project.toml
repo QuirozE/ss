@@ -1,0 +1,4 @@
+name = "ParticleSwarm"
+uuid = "94e58648-8767-4c8c-adc3-5456519632bb"
+authors = ["hochata <hochata@disroot.org>"]
+version = "0.1.0"

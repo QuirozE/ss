@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.14.7
+# v0.19.12
 
 using Markdown
 using InteractiveUtils
@@ -7,15 +7,15 @@ using InteractiveUtils
 # ╔═╡ 81af82f5-d396-49f4-83ff-934a8dee0838
 using DrWatson
 
+# ╔═╡ dbdac828-ce7c-497d-a7e6-16a50e63b8ec
+quickactivate("..", "ss")
+
 # ╔═╡ b905daf4-f8a3-4f69-ad2c-ac0961899881
 begin
 	using Random
-	using Plots; plotlyjs();
+	using Plots
 	using BenchmarkTools
 end
-
-# ╔═╡ dbdac828-ce7c-497d-a7e6-16a50e63b8ec
-@quickactivate("ss")
 
 # ╔═╡ 7370651c-bf0c-11eb-024d-7526a5c8ed91
 md"""
@@ -36,6 +36,8 @@ a través de un espacio de búsqueda.
 En cada ronda, cada particula intenta moverse en la dirección de la mejor posición que
 hayan encontrado y hacia la dirección de la mejor posición global encontrada. También
 se introduce cierta aleatoriedad para fomentar la exploración de nuevas áreas.
+
+En una forma simplificada de la heurística, conocidad como Optimización Acelerada por Enjambre de Partículas (APSO), se sustiyuye la mejor posición histórica por un vector sacado de una distribución normal ``N(0, 1)``. Resulta ser que estadísticamente son suficientemente similares para no afectar la conversión del algoritmo, simplificando la implementación.
 """
 
 # ╔═╡ 01c379bb-a179-4cf6-b5e0-e307f1bc7712
@@ -85,13 +87,11 @@ las mejores posiciones encontradas de ``x_{i}`` y globalmente.
 function move!(p, α, β, ϵ1, ϵ2, g)
 	p.vel = p.vel .+ α * (ϵ1 .* (p.pos .- g)) .+ β * (ϵ2 .* (p.pos .- p.p_best))
 	p.pos = p.pos .+ p.vel
+	return p
 end
 
 # ╔═╡ a11aa894-f58d-49a0-960c-c196dafebbef
-begin
-	move!(p, 1, 1, [1, 1], [1, 1], [1, 1])
-	p
-end
+move!(p, 1, 1, [1, 1], [1, 1], [1, 1])
 
 # ╔═╡ 8bfee0a5-de38-46ec-8715-c52535033d75
 md"""
@@ -107,7 +107,7 @@ en que áreas no buscar.
 begin
 	mutable struct Swarm{T<:AbstractFloat}
 		particles::Array{Particle{T}, 1}
-		best_pos::Array{T, 1}
+		global_best::Array{T, 1}
 		α::T
 		β::T
 		dims
@@ -191,7 +191,7 @@ function step!(s)
 	ϵ2 = rand(s.rng, range(0, 1, step=0.01), dims)
 	
 	for p in s.particles
-		move!(p, s.α, s.β, ϵ1, ϵ2, s.best_pos)
+		move!(p, s.α, s.β, ϵ1, ϵ2, s.global_best)
 		
 		# bounding particle
 		p.pos = min.(p.pos, s.max_lim)
@@ -203,7 +203,7 @@ function step!(s)
 	end
 	
 	for p in s.particles
-		if s.cost(p.pos) < s.cost(s.best_pos)
+		if s.cost(p.pos) < s.cost(s.global_best)
 			s.best_pos = p.pos
 		end
 	end
@@ -233,8 +233,8 @@ end
 # ╔═╡ 37c0d3ff-f84b-43c3-8194-e096acaa422a
 md"""
 Al final de la simulación, se tiene la siguiente configuración. La mejor posición
-fue encontrada en $(swarm.best_pos[1], swarm.best_pos[2]), con valor de
-$(f(swarm.best_pos))
+fue encontrada en $(swarm.global_best[1], swarm.global_best[2]), con valor de
+$(f(swarm.global_best))
 """
 
 # ╔═╡ 4428ccff-ff9d-47b1-a1f9-d206b5018d0f
@@ -257,7 +257,7 @@ function pso(cost; num_particles, dims, axis, steps, α=2, β=2, seed=0)
 	for i in 1:steps
 		step!(swarm)
 	end
-	swarm.best_pos
+	swarm.global_best
 end
 
 # ╔═╡ 7c3c9f60-c070-4e99-8f06-72c870345413
