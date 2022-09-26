@@ -1,5 +1,5 @@
 """
-Particle swarm is a nature inspierd heuristic for optimization. It mimics the
+Particle swarm is a nature inspired heuristic for optimization. It mimics the
 patterns of flocks and fish schools to find global optimums.
 
 At each step, each particle gets closer to its historical best and the global
@@ -17,83 +17,65 @@ function check_eq(mess, e0, es...)
     end
 end
 
+abstract type Particle{T <: Real} end
+
 """
-A particle has a position and a momentum. It also remebers its best position so
-far.
+A particle has a position and a velocity.
 """
-mutable struct Particle
-    pos
-    velocity
-    function Particle(pos)
+mutable struct AccParticle{T} <: Particle{T}
+    pos :: Vector{T}
+    velocity :: Vector{T}
+
+    function AccParticle(pos)
         z = zeros(length(pos))
-        new(pos, z)
+        new{T}(pos, z)
     end
 end
 
-
+# ```math
+# x^{t+1} = (1 - \beta)x^{t} + \beta \mathbf{x}^{\star} + \alpha \epsilon
+# ```
+# where ``\mathbf{x}^{\star}`` is the current best position in the swarm, ``\beta``
+# is a coefficient representing how attracted the particle is to the best
+# particle, ``\alpha`` is a coefficient representing how likely is the particle
+# to wander randomly, and ``\epsilon`` is a random vector from a ``N(0, 1)``
+# distribution.
 """
-At each step, a particle updates its velocity using the following equation
-
-Afterward, the position is updated using a sigmoid activation function on the
-velocity vector.
+Accelerated movement equation.
 """
-function move!(p, best, p_acc, acc, mom, r1, r2, r3)
+function move!(p :: AccParticle, best, α, β, ϵ)
     check_eq(
-        "Incongruent vector dimentions",
+        "In-congruent vector dimensions",
         length(p.pos), length(best),
-        length(r1), length(r2)
+        length(best), length(ϵ)
     )
-    p_best_dir = p_acc * r1 .* (p.p_best - p.pos)
-    best_dir = acc * r2 .* (best - p.pos)
-    p.velocity = mom * p.velocity + p_best_dir + best_dir
-    p.pos = activation.(p.velocity, r3)
+
+    b = β .* best
+    r = α .* ϵ
+    p.pos = (1 - β) .* p.pos + b + r
 end
 
-move!(p, best, p_acc, acc, mom) = move!(
-    p, best, p_acc, acc, mom,
-    rand(length(best)),
-    rand(length(best)),
-    rand(length(best))
+move!(p :: AccParticle, best, α, β) = move!(
+    p,
+    best,
+    α,
+    β,
+    rand(length(best)) .- 0.5
 )
-
-"Sigmoid activation"
-activation(v, r) = if r < 1 / (1 + ℯ^v) 1 else 0 end
 
 """
 A swarm of particles. It also keeps track of the current global best and common
 particle values acceleration
 """
-mutable struct Swarm
-    particles
-    best_pos
-    acc
-    mom
-    obj
-    function Swarm(num_particles, dim, cost, acc, mom)
-        pos = [ random(dim) for i in range(1, num_particles, step=1) ]
-        imin = argmin(cost.(pos))
+mutable struct Swarm{T<:Real}
+    particles :: Vector{Particle{T}}
+    best_pos :: Vector{T}
+    objective_fn :: Function
+
+    function Swarm(particles, cost)
+        imin = argmin(cost.(particles))
         best_pos = pos[imin]
-        particles = Particle.(pos)
-        new(particles, best_pos, acc, mom, cost)
-    end
-end
-
-"""
-Moves all particles, updates invidivual bests and global best
-"""
-function step!(s::Swarm)
-    for p in s.particles
-        move!(p, s.best_pos, s.acc, s.acc, s.mom)
-
-        if obj(p.pos) < obj(p.p_best)
-            p.p_best = p.pos
-        end
-    end
-
-    for p in s.particles
-        if obj(p.pos) < obj(s.best_pos)
-            s.best_pos = p.pos
-        end
+        new{T}(particles, best_pos, cost)
     end
 end
 
