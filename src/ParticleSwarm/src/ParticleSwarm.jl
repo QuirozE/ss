@@ -7,7 +7,7 @@ best.
 """
 module ParticleSwarm
 
-export Particle, Swarm, move!, step!
+export Particle, AccParticle, Swarm, move!, step!
 
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
@@ -23,39 +23,41 @@ abstract type Particle{T <: Real} end
 A particle has a position and a velocity.
 """
 mutable struct AccParticle{T} <: Particle{T}
-    pos :: Vector{T}
-    velocity :: Vector{T}
+    pos::Vector{T}
 
-    function AccParticle(pos)
-        z = zeros(length(pos))
-        new{T}(pos, z)
+    function AccParticle(pos::Vector{T}) where {T <: Real}
+        new{T}(pos)
     end
 end
 
-# ```math
-# x^{t+1} = (1 - \beta)x^{t} + \beta \mathbf{x}^{\star} + \alpha \epsilon
-# ```
-# where ``\mathbf{x}^{\star}`` is the current best position in the swarm, ``\beta``
-# is a coefficient representing how attracted the particle is to the best
-# particle, ``\alpha`` is a coefficient representing how likely is the particle
-# to wander randomly, and ``\epsilon`` is a random vector from a ``N(0, 1)``
-# distribution.
+function Base.iterate(p::AccParticle, state=1)
+    if state >= length(p.pos)
+        nothing
+    else
+        (p.pos[state], state + 1)
+    end
+end
+
+Base.length(p::AccParticle) = Base.length(p.pos)
+
+Base.getindex(p::AccParticle, i) = Base.getindex(p.pos, i)
+
 """
 Accelerated movement equation.
 """
-function move!(p :: AccParticle, best, α, β, ϵ)
+function move!(p::AccParticle, best::AccParticle, α, β, ϵ)
     check_eq(
         "In-congruent vector dimensions",
-        length(p.pos), length(best),
-        length(best), length(ϵ)
+        length(p.pos), length(best.pos),
+        length(best.pos), length(ϵ)
     )
 
-    b = β .* best
+    b = β .* best.pos
     r = α .* ϵ
     p.pos = (1 - β) .* p.pos + b + r
 end
 
-move!(p :: AccParticle, best, α, β) = move!(
+move!(p, best, α, β) = move!(
     p,
     best,
     α,
@@ -67,16 +69,42 @@ move!(p :: AccParticle, best, α, β) = move!(
 A swarm of particles. It also keeps track of the current global best and common
 particle values acceleration
 """
-mutable struct Swarm{T<:Real}
-    particles :: Vector{Particle{T}}
-    best_pos :: Vector{T}
-    objective_fn :: Function
+mutable struct Swarm
+    particles
+    best_particle
+    objective_fn
+    α
+    β
 
-    function Swarm(particles, cost)
+    function Swarm(particles::Vector, cost; α=0.2, β=0.5)
         imin = argmin(cost.(particles))
-        best_pos = pos[imin]
-        new{T}(particles, best_pos, cost)
+        best_pos = particles[imin]
+        new(particles, best_pos, cost, α, β)
     end
 end
 
+function Swarm(dims::Integer, cost; num_particles=10, type=apso, kwargs...)
+    if type == apso
+        particles = [AccParticle(rand(dims)) for _ in 1:num_particles]
+        Swarm(particles, cost, kwargs...)
+    end
 end
+
+@enum ParticleType begin
+    apso
+end
+
+function step!(swarm)
+    for (idx, particle) in enumerate(swarm.particles)
+        move!(particle, swarm.best_particle, swarm.α, swarm.β)
+    end
+
+    imin = argmin(swarm.objective_fn.(swarm.particles))
+    swarm.best_particle = swarm.particles[imin]
+end
+
+function pso(cost, dims; min_change=0.1, kwargs)
+    swarm = Swarm(cost, dims, kwargs)
+end
+
+end # module
