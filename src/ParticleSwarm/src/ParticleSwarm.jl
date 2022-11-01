@@ -7,7 +7,7 @@ best.
 """
 module ParticleSwarm
 
-export Particle, AccParticle, Swarm, move!, step!
+export Particle, AccParticle, Swarm, move!, step!, pso
 
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
@@ -76,26 +76,27 @@ mutable struct Swarm
     α
     β
 
-    function Swarm(particles::Vector, cost; α=0.2, β=0.5)
+    function Swarm(particles::Vector, cost; α=0.2, β=0.5, kwargs...)
         imin = argmin(cost.(particles))
         best_pos = particles[imin]
         new(particles, best_pos, cost, α, β)
     end
 end
 
-function Swarm(dims::Integer, cost; num_particles=10, type=apso, kwargs...)
+function Swarm(dims::Integer, cost; num_particles=10, type=apso, range=0:0.1:1, α = 0.2, β = 0.5, kwargs...)
     if type == apso
-        particles = [AccParticle(rand(dims)) for _ in 1:num_particles]
-        Swarm(particles, cost, kwargs...)
+        particles = [AccParticle(rand(range, dims)) for _ in 1:num_particles]
+        Swarm(particles, cost, α = α, β = β, kwargs...)
     end
 end
 
 @enum ParticleType begin
     apso
+    bpso
 end
 
 function step!(swarm)
-    for (idx, particle) in enumerate(swarm.particles)
+    for particle in swarm.particles
         move!(particle, swarm.best_particle, swarm.α, swarm.β)
     end
 
@@ -103,8 +104,12 @@ function step!(swarm)
     swarm.best_particle = swarm.particles[imin]
 end
 
-function pso(cost, dims; min_change=0.1, kwargs)
-    swarm = Swarm(cost, dims, kwargs)
+function pso(cost, dims; steps = 20, kwargs...)
+    swarm = Swarm(dims, cost, kwargs...)
+    for i in 1:steps
+        step!(swarm)
+    end
+    swarm.best_particle
 end
 
 end # module
