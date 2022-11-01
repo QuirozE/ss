@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.12
+# v0.19.14
 
 using Markdown
 using InteractiveUtils
@@ -15,6 +15,7 @@ begin
 	using Random
 	using Plots
 	using BenchmarkTools
+	using ParticleSwarm
 end
 
 # ╔═╡ 7370651c-bf0c-11eb-024d-7526a5c8ed91
@@ -40,27 +41,8 @@ se introduce cierta aleatoriedad para fomentar la exploración de nuevas áreas.
 En una forma simplificada de la heurística, conocidad como Optimización Acelerada por Enjambre de Partículas (APSO), se sustiyuye la mejor posición histórica por un vector sacado de una distribución normal ``N(0, 1)``. Resulta ser que estadísticamente son suficientemente similares para no afectar la conversión del algoritmo, simplificando la implementación.
 """
 
-# ╔═╡ 01c379bb-a179-4cf6-b5e0-e307f1bc7712
-begin
-	mutable struct Particle{T<:AbstractFloat}
-		pos::Array{T, 1}
-		vel::Array{T, 1}
-		p_best::Array{T, 1}
-	end
-	
-	function Particle(init)
-		float_init = convert.(AbstractFloat, init)
-		type_init = eltype(float_init)
-		Particle(
-			float_init,
-			zeros(type_init, length(float_init)),
-			float_init
-		)
-	end
-end
-
 # ╔═╡ 284a3564-8004-4197-8757-7cb35dfdffa5
-p = Particle([1, 0])
+p = AccParticle([1.0, 0.5])
 
 # ╔═╡ 37ebb301-dfaf-4c04-97fe-71d73a24c109
 md"""
@@ -83,15 +65,8 @@ aleatorio será el movimiento de las partículas y ``\textbf{x}_{i}, \textbf{g}`
 las mejores posiciones encontradas de ``x_{i}`` y globalmente.
 """
 
-# ╔═╡ a1e23da6-4dcf-4e16-8a9c-f280eecfb22b
-function move!(p, α, β, ϵ1, ϵ2, g)
-	p.vel = p.vel .+ α * (ϵ1 .* (p.pos .- g)) .+ β * (ϵ2 .* (p.pos .- p.p_best))
-	p.pos = p.pos .+ p.vel
-	return p
-end
-
 # ╔═╡ a11aa894-f58d-49a0-960c-c196dafebbef
-move!(p, 1, 1, [1, 1], [1, 1], [1, 1])
+ParticleSwarm.move!(p, p, 0.5, 0.5)
 
 # ╔═╡ 8bfee0a5-de38-46ec-8715-c52535033d75
 md"""
@@ -102,52 +77,6 @@ Además, para tener una mejor visualización más adelante, se incluyen límites
 espacio de búsqueda. En una aplicación real esto también podría ser útil si ya se sabe
 en que áreas no buscar.
 """
-
-# ╔═╡ 4a7d1be4-ab8a-44c2-8845-3977a2e8dcf4
-begin
-	mutable struct Swarm{T<:AbstractFloat}
-		particles::Array{Particle{T}, 1}
-		global_best::Array{T, 1}
-		α::T
-		β::T
-		dims
-		min_lim
-		max_lim
-		cost
-		rng
-	end	
-
-	function Swarm(dims, n, axis, cost; α=2, β=2, seed=0)
-		if(n < 1)
-			error("Swarm of at least 1 is required")
-		end
-
-		rng = MersenneTwister(seed)
-		min = minimum(axis)
-		max = maximum(axis)
-		float_axis = range(min, max, step=0.1)
-
-		particles = [
-			Particle(rand(rng, float_axis, dims)) for _ in 1:n
-		]
-
-		g_best = particles[1]
-		for p in particles
-			if(cost(p.pos) < cost(g_best.pos))
-				g_best = p
-			end
-		end
-
-		Swarm(
-			particles,
-			g_best.pos,
-			convert(AbstractFloat, α),
-			convert(AbstractFloat, β),
-			dims, min, max, cost, rng
-		)
-	end
-end
-
 
 # ╔═╡ b6ea2563-e197-4c60-b3f3-8dd4e31aed41
 md"""
@@ -169,7 +98,7 @@ la función.
 f(x; m = 10) = - sin(x[1])*(sin(x[1]^2/π)^(2*m)) - sin(x[2])*(sin(2*x[2]^2/π)^(2m))
 
 # ╔═╡ a1003d54-d733-455e-9fc2-6f9e9965e9b1
-s = Swarm(2, 5, -500:500, f)
+s = ParticleSwarm.Swarm(2, f, num_particles = 5)
 
 # ╔═╡ 3edce3a8-fc84-43ca-8d5f-383ec45387a8
 begin
@@ -184,31 +113,6 @@ encontrada usando la función de costo, teniendo en cuenta los límites del espa
 búsqueda. Al terminar eso, se actualiza la mejor posición encontrada globalmente.
 """
 
-# ╔═╡ 6e26965d-d84a-4eee-aef7-f90bc8ff22f3
-function step!(s)
-	dims = length(s.particles[1].pos)
-	ϵ1 = rand(s.rng, range(0, 1, step=0.01), dims)
-	ϵ2 = rand(s.rng, range(0, 1, step=0.01), dims)
-	
-	for p in s.particles
-		move!(p, s.α, s.β, ϵ1, ϵ2, s.global_best)
-		
-		# bounding particle
-		p.pos = min.(p.pos, s.max_lim)
-		p.pos = max.(p.pos, s.min_lim)
-	
-		if s.cost(p.pos) < s.cost(p.p_best) 
-			p.p_best = p.pos
-		end
-	end
-	
-	for p in s.particles
-		if s.cost(p.pos) < s.cost(s.global_best)
-			s.best_pos = p.pos
-		end
-	end
-end
-
 # ╔═╡ 5f1e3197-b813-42f5-afcd-4f0285a37414
 md"""
 Usando `Plots.jl` se puede generar una visualización de las partículas durante la
@@ -217,7 +121,7 @@ optimización.
 
 # ╔═╡ 83dde1eb-2f6f-4032-bc39-2b8cefab91be
 begin
-	swarm = Swarm(2, 50, 0:4, f)
+	swarm = Swarm(2, f, num_particles = 20, range = 0:0.01:4)
 
 	anim = @animate for i in 1:10
 		step!(swarm)
@@ -227,14 +131,14 @@ begin
 		scatter!(x, y, label="")
 	end
 	
-	gif(anim, "/tmp/anim_fps5.gif", fps = 3)
+	gif(anim, "/tmp/anim_fps5.gif", fps = 1)
 end
 
 # ╔═╡ 37c0d3ff-f84b-43c3-8194-e096acaa422a
 md"""
 Al final de la simulación, se tiene la siguiente configuración. La mejor posición
-fue encontrada en $(swarm.global_best[1], swarm.global_best[2]), con valor de
-$(f(swarm.global_best))
+fue encontrada en $(swarm.best_particle[1], swarm.best_particle[2]), con valor de
+$(f(swarm.best_particle))
 """
 
 # ╔═╡ 4428ccff-ff9d-47b1-a1f9-d206b5018d0f
@@ -251,17 +155,8 @@ md"""
 tiene que colocar todo el código anterior en una función.
 """
 
-# ╔═╡ 59672487-3d77-456c-bb67-e1865c7409be
-function pso(cost; num_particles, dims, axis, steps, α=2, β=2, seed=0)
-	swarm = Swarm(dims, num_particles, axis, cost, α=α, β=β, seed=seed)
-	for i in 1:steps
-		step!(swarm)
-	end
-	swarm.global_best
-end
-
 # ╔═╡ 7c3c9f60-c070-4e99-8f06-72c870345413
-@benchmark pso(f, num_particles=50, dims=2, axis=xk, steps=100)
+@benchmark pso(f, 2, steps=1000)
 
 # ╔═╡ e2b3dc4c-f771-4d15-9577-528b98680236
 
@@ -272,24 +167,19 @@ end
 # ╠═b905daf4-f8a3-4f69-ad2c-ac0961899881
 # ╟─7370651c-bf0c-11eb-024d-7526a5c8ed91
 # ╟─8107a2fb-c903-47bd-a8f2-3ef5efe90bcd
-# ╠═01c379bb-a179-4cf6-b5e0-e307f1bc7712
 # ╠═284a3564-8004-4197-8757-7cb35dfdffa5
 # ╟─37ebb301-dfaf-4c04-97fe-71d73a24c109
-# ╠═a1e23da6-4dcf-4e16-8a9c-f280eecfb22b
 # ╠═a11aa894-f58d-49a0-960c-c196dafebbef
 # ╟─8bfee0a5-de38-46ec-8715-c52535033d75
-# ╠═4a7d1be4-ab8a-44c2-8845-3977a2e8dcf4
 # ╠═a1003d54-d733-455e-9fc2-6f9e9965e9b1
 # ╟─b6ea2563-e197-4c60-b3f3-8dd4e31aed41
 # ╠═d3d2f6ec-4907-4fa7-96c7-a21fd9e13f1f
 # ╠═3edce3a8-fc84-43ca-8d5f-383ec45387a8
 # ╟─3188e707-fc77-40cb-acbb-2ac92cd5641b
-# ╠═6e26965d-d84a-4eee-aef7-f90bc8ff22f3
 # ╟─5f1e3197-b813-42f5-afcd-4f0285a37414
 # ╠═83dde1eb-2f6f-4032-bc39-2b8cefab91be
 # ╟─37c0d3ff-f84b-43c3-8194-e096acaa422a
 # ╠═4428ccff-ff9d-47b1-a1f9-d206b5018d0f
 # ╟─7be83d4d-71ec-4efc-8368-544d39ccd3e1
-# ╠═59672487-3d77-456c-bb67-e1865c7409be
 # ╠═7c3c9f60-c070-4e99-8f06-72c870345413
 # ╟─e2b3dc4c-f771-4d15-9577-528b98680236
