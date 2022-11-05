@@ -20,14 +20,10 @@ end
 abstract type Particle{T <: Real} end
 
 """
-A particle has a position and a velocity.
+A particle has a position.
 """
 mutable struct AccParticle{T} <: Particle{T}
     pos::Vector{T}
-
-    function AccParticle(pos::Vector{T}) where {T <: Real}
-        new{T}(pos)
-    end
 end
 
 function Base.iterate(p::AccParticle, state=1)
@@ -65,6 +61,50 @@ move!(p, best, α, β) = move!(
     rand(length(best)) .- 0.5
 )
 
+# stub because accelerated particles don't store their best position
+update_best!(p::AccParticle, _) = true
+
+mutable struct BoolParticle <: Particle{Bool}
+    pos
+    vel
+    best_pos
+
+    function BoolParticle(pos::Vector{Bool})
+        new(pos, zeros(length(pos)), pos)
+    end
+end
+
+function Base.iterate(p::BoolParticle, state=1)
+    if state >= length(p.pos)
+        nothing
+    else
+        (p.pos[state], state + 1)
+    end
+end
+
+Base.length(p::BoolParticle) = Base.length(p.pos)
+
+Base.getindex(p::BoolParticle, i) = Base.getindex(p.pos, i)
+
+function move!(p::BoolParticle, best::BoolParticle, α, β, ϵ)
+    vel_p_best = α .* (p.pos - p.best_pos)
+    vel_best = β .* (p.pos - best.pos)
+    p.vel = p.vel + ϵ .* (vel_p_best + vel_best)
+
+    probs = sigmoid.(p.vel)
+    p.pos = rnd_swap.(probs)
+end
+
+sigmoid(x) = 1/(1 + ℯ^(-x))
+
+rnd_swap(p) = rand() < p
+
+function update_best!(p::BoolParticle, cost)
+    if cost(p.pos) < cost(p.best_pos)
+        p.best_pos = p.pos
+    end
+end
+
 """
 A swarm of particles. It also keeps track of the current global best and common
 particle values acceleration
@@ -87,6 +127,9 @@ function Swarm(dims::Integer, cost; num_particles=10, type=apso, range=0:0.1:1, 
     if type == apso
         particles = [AccParticle(rand(range, dims)) for _ in 1:num_particles]
         Swarm(particles, cost, α = α, β = β, kwargs...)
+    elseif type == bpso
+        particles = [BoolParticle(rand(Bool, dims)) for _ in 1:num_particles]
+        Swarm(particles, cost, α = α, β = β, kwargs...)
     end
 end
 
@@ -98,6 +141,7 @@ end
 function step!(swarm)
     for particle in swarm.particles
         move!(particle, swarm.best_particle, swarm.α, swarm.β)
+        update_best!(particle, swarm.objective_fn)
     end
 
     imin = argmin(swarm.objective_fn.(swarm.particles))
