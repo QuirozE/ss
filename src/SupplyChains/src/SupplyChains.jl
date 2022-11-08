@@ -17,7 +17,7 @@ centers have a maximum capacity, and selling points have a demand.
 """
 module SupplyChains
 
-using LinearAlgebra
+using LinearAlgebra, ParticleSwarm
 
 export Capacity, Flow, Cost, SupplyChain,
     size, cost, length, split_pos, is_valid
@@ -30,7 +30,7 @@ Checks if all elements are equal and launch an error with message `mess` if not.
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
         if e0 != e
-            error(mess * "at element $i: $e0 ≠ $e")
+            error(mess * " at element $i: $e0 ≠ $e")
         end
     end
 end
@@ -157,6 +157,7 @@ function (c::Cost)(ap, ad, load)
     al_cost = transpose(au_cost) * vec(load)
     f_vec = [c.plants ; c.distributors]
     f_cost = transpose(f_vec) * [ap; ad]
+
     al_cost + f_cost
 end
 
@@ -195,8 +196,42 @@ function split_pos(s::SupplyChain, pos_vec)
     (pos_vec[1:dims[2]], pos_vec[dims[2] + 1:l])
 end
 
-function is_valid(s, pos_vec, flow)
-    true
+function is_feasible(s, pos_vec)
+    active_plants, active_dists = split_pos(s, pos_vec)
+    plants_potential = transpose(active_plants) * s.capacities.plants
+    dists_potential = transpose(active_dists) * s.capacities.distributors
+
+    demand = sum(s.capacities.clients)
+
+    demand <= plants_potential && demand <= dists_potential
+end
+
+function optimal_load(s, p)
+    s.costs.unitary
+end
+
+function particle_cost(s, p)
+    ap, ad = split_pos(s, p)
+    s.costs(ap, ad, optimal_load(s, p))
+end
+
+function optimize(s; num_particles = 16, steps = 100)
+    dims = size(s)
+    vec_l = dims[2] + dims[3]
+    particles = []
+    while length(particles) < num_particles
+        p = BoolParticle(rand(Bool, vec_l))
+        if is_feasible(s, p)
+            push!(particles, p)
+        end
+    end
+
+    swarm = Swarm(particles, x -> particle_cost(s, x))
+    for _ in 1:steps
+        step!(swarm)
+    end
+
+    (swarm.best_particle, optimal_load(s, swarm.best_particle))
 end
 
 end # module

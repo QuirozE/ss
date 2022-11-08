@@ -7,7 +7,7 @@ best.
 """
 module ParticleSwarm
 
-export Particle, AccParticle, Swarm, move!, step!, pso
+export Particle, AccParticle, BoolParticle, Swarm, move!, step!, pso
 
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
