@@ -19,8 +19,7 @@ module SupplyChains
 
 using LinearAlgebra, ParticleSwarm
 
-export Capacity, Flow, Cost, SupplyChain,
-    size, cost, length, split_pos, is_valid
+export Capacity, Flow, Cost, SupplyChain, size, cost, length
 
 """
     check_eq(mess, e1, e2)
@@ -206,32 +205,54 @@ function is_feasible(s, pos_vec)
     demand <= plants_potential && demand <= dists_potential
 end
 
-function optimal_load(s, p)
+mutable struct ChainSolution <: Particle{Bool}
+    load
+    bool_particle
+end
+
+move!(p::ChainSolution, q::ChainSolution, α, β) =
+    move!(p.bool_particle, q.bool_particle, α, β)
+
+struct LPCost
+    chain
+    use_lp
+end
+
+function optimal_load(s, _)
     s.costs.unitary
 end
 
-function particle_cost(s, p)
-    ap, ad = split_pos(s, p)
-    s.costs(ap, ad, optimal_load(s, p))
+function particle_cost(p::ChainSolution, o::LPCost)
+    ap, ad = split_pos(o.chain, p)
+    if o.use_lp
+        p.load = optimal_load(o.chain, p.bool_particle.pos)
+    end
+
+    if is_feasible(o.chain, p.bool_particle.pos)
+        o.chain.costs(p.bool_particle.pos, p.load)
+    else
+        10^5
+    end
 end
 
-function optimize(s; num_particles = 16, steps = 100)
+function optimize(s; num_particles = 16, steps = 100, use_lp = true)
     dims = size(s)
     vec_l = dims[2] + dims[3]
     particles = []
     while length(particles) < num_particles
-        p = BoolParticle(rand(Bool, vec_l))
-        if is_feasible(s, p)
+        p = ChainParticle(BoolParticle(rand(Bool, vec_l)), s.costs.unitary)
+        if is_feasible(s, p.bool_particle.pos)
             push!(particles, p)
         end
     end
 
-    swarm = Swarm(particles, x -> particle_cost(s, x))
+    optim = LPCost(s, use_lp)
+    swarm = Swarm(map(x -> x, particles), optim)
     for _ in 1:steps
         step!(swarm)
     end
 
-    (swarm.best_particle, optimal_load(s, swarm.best_particle))
+    swarm.best
 end
 
 end # module
