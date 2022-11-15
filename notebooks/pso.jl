@@ -137,12 +137,12 @@ optimización.
 
 # ╔═╡ 83dde1eb-2f6f-4032-bc39-2b8cefab91be
 begin
-	swarm = Swarm(2, f, type = ParticleSwarm.apso, num_particles = 20, range = 0:0.01:5)
+	swarm = Swarm(2, f, type = ParticleSwarm.apso, num_particles = 20, range = 0:0.01:6)
 
 	anim = @animate for i in 1:10
 		step!(swarm)
-		x = [p.pos[1] for p in swarm.particles]
-		y = [p.pos[2] for p in swarm.particles]
+		x = [p[1] for p in eachcol(swarm.particles.pos)]
+		y = [p[2] for p in eachcol(swarm.particles.pos)]
 		contour(xk, xk, (x, y) -> f([x, y]))
 		scatter!(x, y, label="")
 	end
@@ -153,14 +153,13 @@ end
 # ╔═╡ 37c0d3ff-f84b-43c3-8194-e096acaa422a
 md"""
 Al final de la simulación, se tiene la siguiente configuración. La mejor posición
-fue encontrada en $(swarm.best_particle[1], swarm.best_particle[2]), con valor de
-$(f(swarm.best_particle))
+fue encontrada en $(swarm.best[1]), con valor de $(swarm.best[2]).
 """
 
 # ╔═╡ 4428ccff-ff9d-47b1-a1f9-d206b5018d0f
 begin
-	x = [p.pos[1] for p in swarm.particles]
-	y = [p.pos[2] for p in swarm.particles]
+	x = [p[1] for p in eachcol(swarm.particles.pos)]
+	y = [p[2] for p in eachcol(swarm.particles.pos)]
 	contour(xk, xk, (x, y) -> f([x, y]))
 	scatter!(x, y, label="")
 end
@@ -293,7 +292,7 @@ begin
 		step!(b_swarm)
 	end
 	
-	best_subgraph = decode_subgraph(g, b_swarm.best_particle.pos)
+	best_subgraph = decode_subgraph(g, b_swarm.best[1])
 end
 
 # ╔═╡ e43fb917-947f-4b4c-9f73-862cee20d305

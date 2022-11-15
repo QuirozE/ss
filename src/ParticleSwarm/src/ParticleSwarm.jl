@@ -7,7 +7,7 @@ best.
 """
 module ParticleSwarm
 
-export Particle, AccParticle, Swarm, move!, step!, pso
+export Particles, AccParticles, BoolParticles, Swarm, move!, step!, pso
 
 function check_eq(mess, e0, es...)
     for (i, e) in enumerate(es)
@@ -17,92 +17,108 @@ function check_eq(mess, e0, es...)
     end
 end
 
-abstract type Particle{T <: Real} end
+abstract type Particles{T <: Real} end
 
-"""
-A particle has a position.
-"""
-mutable struct AccParticle{T} <: Particle{T}
-    pos::Vector{T}
-end
+eltype(::Type{<:Particles{T}}) where {T} = T
 
-function Base.iterate(p::AccParticle, state=1)
-    if state >= length(p.pos)
-        nothing
-    else
-        (p.pos[state], state + 1)
-    end
-end
+particles_cost(particles::T, obj_fn) where T <: Particles =
+    mapslices(obj_fn, particles.pos, dims=1)
 
-Base.length(p::AccParticle) = Base.length(p.pos)
-
-Base.getindex(p::AccParticle, i) = Base.getindex(p.pos, i)
-
-"""
-Accelerated movement equation.
-"""
-function move!(p::AccParticle, best::AccParticle, α, β, ϵ)
-    check_eq(
-        "In-congruent vector dimensions",
-        length(p.pos), length(best.pos),
-        length(best.pos), length(ϵ)
-    )
-
-    b = β .* best.pos
-    r = α .* ϵ
-    p.pos = (1 - β) .* p.pos + b + r
-end
-
-move!(p, best, α, β) = move!(
+move!(p::T, best, α, β) where T <: Particles = move!(
     p,
     best,
     α,
     β,
-    rand(length(best)) .- 0.5
+    rand(0:0.01:1, size(p.pos)) .- 0.5
 )
 
-# stub because accelerated particles don't store their best position
-update_best!(p::AccParticle, _) = true
+function update_ranks!(p::T, prev_cost, costs, curr_best) where T <: Particles
+    (best_pos, best_cost) = curr_best
+    for i in axes(p.pos, 1)
+        if costs[i] < prev_cost[i]
+            p.best_pos[:, i] = p.pos[:, i]
+        end
+        if costs[i] < best_cost
+            best_pos = p.pos[:, i]
+            best_cost = costs[i]
+        end
+    end
+    (best_pos, best_cost)
+end
 
-mutable struct BoolParticle <: Particle{Bool}
+"""
+Accelerated particles only store their position.
+"""
+mutable struct AccParticles{T} <: Particles{T}
+    pos::Matrix{T}
+end
+
+"""
+Accelerated movement equation.
+"""
+function acc_move(p, best, α, β, ϵ)
+    b = β .* best
+    r = α .* ϵ
+    (1 - β) .* p + b + r
+end
+
+function move!(p::AccParticles{T}, best, α, β, ϵ) where T <: Real
+    for i in axes(p.pos, 2)
+        p.pos[:, i] = acc_move(p.pos[:, i], best, α, β, ϵ[:, i])
+    end
+    p
+end
+
+function update_ranks!(p::AccParticles{T}, _, costs, curr_best) where T <: Real
+    (best_pos, best_cost) = curr_best
+    for i in axes(p.pos, 2)
+        if costs[i] < best_cost
+            best_pos = p.pos[:, i]
+            best_cost = costs[i]
+        end
+    end
+    (best_pos, best_cost)
+end
+
+mutable struct BoolParticles <: Particles{Bool}
     pos
     vel
     best_pos
 
-    function BoolParticle(pos::Vector{Bool})
-        new(pos, zeros(length(pos)), pos)
+    function BoolParticles(pos::Matrix{Bool})
+        z = zeros(size(pos))
+        new(pos, z, pos)
     end
 end
 
-function Base.iterate(p::BoolParticle, state=1)
-    if state >= length(p.pos)
-        nothing
-    else
-        (p.pos[state], state + 1)
-    end
+function bool_move(p, p_vel, p_best, best, α, β, ϵ)
+    vel_p_best = α .* (p - p_best)
+    vel_best = β .* (p - best)
+    vel = p_vel + ϵ .* (vel_p_best + vel_best)
+
+    probs = sigmoid.(vel)
+    (rnd_swap.(probs), vel)
 end
 
-Base.length(p::BoolParticle) = Base.length(p.pos)
-
-Base.getindex(p::BoolParticle, i) = Base.getindex(p.pos, i)
-
-function move!(p::BoolParticle, best::BoolParticle, α, β, ϵ)
-    vel_p_best = α .* (p.pos - p.best_pos)
-    vel_best = β .* (p.pos - best.pos)
-    p.vel = p.vel + ϵ .* (vel_p_best + vel_best)
-
-    probs = sigmoid.(p.vel)
-    p.pos = rnd_swap.(probs)
-end
-
-sigmoid(x) = 1/(1 + ℯ^(-x))
+sigmoid(x) = 1 / (1 + ℯ^(-x))
 
 rnd_swap(p) = rand() < p
 
-function update_best!(p::BoolParticle, cost)
-    if cost(p.pos) < cost(p.best_pos)
-        p.best_pos = p.pos
+function move!(p::BoolParticles, best, α, β, ϵ)
+    for i in axes(p.pos, 2)
+        (n_pos, n_vel) = bool_move(
+            p.pos[:, i],
+            p.vel[:, i],
+            p.best_pos[:, i],
+            best,
+            α,
+            β,
+            ϵ[:, i]
+        )
+        p.pos[:, i] = n_pos
+        p.vel[:, i] = n_vel
     end
+    p.pos
 end
 
 """
@@ -111,26 +127,34 @@ particle values acceleration
 """
 mutable struct Swarm
     particles
-    best_particle
-    objective_fn
+    best
+    obj
+    costs
     α
     β
 
-    function Swarm(particles::Vector, cost; α=0.2, β=0.5, kwargs...)
-        imin = argmin(cost.(particles))
-        best_pos = particles[imin]
-        new(particles, best_pos, cost, α, β)
+    function Swarm(particles::T, obj_fn; α=0.2, β=0.5, kwargs...) where T <: Particles
+        costs = particles_cost(particles, obj_fn)
+        best = argmin(costs)
+        best_pos = isa(best, Int) ? best : best[2]
+        new(particles, (particles.pos[:, best_pos], costs[best_pos]), obj_fn, costs, α, β)
     end
 end
 
-function Swarm(dims::Integer, cost; num_particles=10, type=apso, range=0:0.1:1, α = 0.2, β = 0.5, kwargs...)
-    if type == apso
-        particles = [AccParticle(rand(range, dims)) for _ in 1:num_particles]
-        Swarm(particles, cost, α = α, β = β, kwargs...)
+function Swarm(dims::Integer, cost; num_particles=10, type=apso, range=0:0.1:1, α=0.2, β=0.5, kwargs...)
+    particles =
+        if type == apso
+        AccParticles(rand(range, dims, num_particles))
     elseif type == bpso
-        particles = [BoolParticle(rand(Bool, dims)) for _ in 1:num_particles]
-        Swarm(particles, cost, α = α, β = β, kwargs...)
+            BoolParticles(rand(Bool, dims, num_particles))
     end
+    Swarm(
+        particles,
+        cost,
+        α=α,
+        β=β,
+        kwargs...
+            )
 end
 
 @enum ParticleType begin
@@ -139,21 +163,25 @@ end
 end
 
 function step!(swarm)
-    for particle in swarm.particles
-        move!(particle, swarm.best_particle, swarm.α, swarm.β)
-        update_best!(particle, swarm.objective_fn)
+    move!(swarm.particles, swarm.best[1], swarm.α, swarm.β)
+
+    prev_costs = swarm.costs
+    swarm.costs = particles_cost(swarm.particles, swarm.obj)
+
+    best = update_ranks!(swarm.particles, prev_costs, swarm.costs, swarm.best)
+    if best != swarm.best
+        swarm.best = best
     end
 
-    imin = argmin(swarm.objective_fn.(swarm.particles))
-    swarm.best_particle = swarm.particles[imin]
+    swarm.best
 end
 
-function pso(cost, dims; steps = 20, kwargs...)
+function pso(cost, dims; steps=20, kwargs...)
     swarm = Swarm(dims, cost, kwargs...)
-    for i in 1:steps
+    for _ in 1:steps
         step!(swarm)
     end
-    swarm.best_particle
+    swarm.best
 end
 
 end # module

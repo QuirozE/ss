@@ -5,3 +5,4 @@ version = "0.1.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+ParticleSwarm = "94e58648-8767-4c8c-adc3-5456519632bb"
