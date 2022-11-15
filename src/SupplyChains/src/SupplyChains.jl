@@ -19,7 +19,7 @@ module SupplyChains
 
 using LinearAlgebra, ParticleSwarm
 
-export Capacity, Flow, Cost, SupplyChain, size, cost, length
+export Capacity, Flow, Cost, SupplyChain, size, length
 
 """
     check_eq(mess, e1, e2)
@@ -46,9 +46,9 @@ end
 function Base.:(==)(c1::Capacity, c2::Capacity)
     (
         isequal(c1.suppliers, c2.suppliers) &&
-        isequal(c1.plants, c2.plants) &&
-        isequal(c1.distributors, c2.distributors) &&
-        isequal(c1.clients, c2.clients)
+            isequal(c1.plants, c2.plants) &&
+            isequal(c1.distributors, c2.distributors) &&
+            isequal(c1.clients, c2.clients)
     )
 end
 
@@ -154,7 +154,7 @@ function (c::Cost)(ap, ad, load)
 
     au_cost = vec(active_flow(c.unitary, ap, ad))
     al_cost = transpose(au_cost) * vec(load)
-    f_vec = [c.plants ; c.distributors]
+    f_vec = [c.plants; c.distributors]
     f_cost = transpose(f_vec) * [ap; ad]
 
     al_cost + f_cost
@@ -192,7 +192,7 @@ function split_pos(s::SupplyChain, pos_vec)
     l = length(pos_vec)
     dims = size(s)
     check_eq("Incongruent active nodes vector", l, dims[2] + dims[3])
-    (pos_vec[1:dims[2]], pos_vec[dims[2] + 1:l])
+    (pos_vec[1:dims[2]], pos_vec[dims[2]+1:l])
 end
 
 function is_feasible(s, pos_vec)
@@ -205,16 +205,9 @@ function is_feasible(s, pos_vec)
     demand <= plants_potential && demand <= dists_potential
 end
 
-mutable struct ChainSolution <: Particle{Bool}
-    load
-    bool_particle
-end
-
-move!(p::ChainSolution, q::ChainSolution, α, β) =
-    move!(p.bool_particle, q.bool_particle, α, β)
-
-struct LPCost
+mutable struct ChainParams
     chain
+    loads
     use_lp
 end
 
@@ -222,36 +215,49 @@ function optimal_load(s, _)
     s.costs.unitary
 end
 
-function particle_cost(p::ChainSolution, o::LPCost)
-    ap, ad = split_pos(o.chain, p)
-    if o.use_lp
-        p.load = optimal_load(o.chain, p.bool_particle.pos)
-    end
-
-    if is_feasible(o.chain, p.bool_particle.pos)
-        o.chain.costs(p.bool_particle.pos, p.load)
+function penalized_cost(chain, pos, load)
+    if is_feasible(chain, pos)
+        ap, ad = split_pos(chain, pos)
+        chain.costs(ap, ad, load)
     else
         10^5
     end
 end
 
-function optimize(s; num_particles = 16, steps = 100, use_lp = true)
+function ParticleSwarm.particles_cost(p::BoolParticles, c::ChainParams)
+    if c.use_lp
+        c.loads = mapslices(pos -> optimal_load(c.chain, pos), p.pos, dims=1)
+    end
+
+    map(
+        i -> penalized_cost(c.chain, p.pos[:, i], c.loads[i]),
+        axes(p.pos, 2)
+    )
+end
+
+function swarm_optimizer(s; num_particles=16, use_lp=false)
     dims = size(s)
     vec_l = dims[2] + dims[3]
-    particles = []
-    while length(particles) < num_particles
-        p = ChainParticle(BoolParticle(rand(Bool, vec_l)), s.costs.unitary)
-        if is_feasible(s, p.bool_particle.pos)
-            push!(particles, p)
+    particles = zeros(Bool, vec_l, num_particles)
+    i = 1
+    while i <= num_particles
+        p = rand(Bool, vec_l)
+        if is_feasible(s, p)
+            particles[:, i] = p
+            i = i + 1
         end
     end
 
-    optim = LPCost(s, use_lp)
-    swarm = Swarm(map(x -> x, particles), optim)
-    for _ in 1:steps
-        step!(swarm)
-    end
+    loads = [deepcopy(s.costs.unitary) for _ in 1:num_particles]
+    optim = ChainParams(s, loads, use_lp)
+    optim
+    Swarm(BoolParticles(map(x -> x, particles)), optim)
+end
 
+function optimize(swarm; steps = 200)
+    for _ in 1:steps
+        ParticleSwarm.step!(swarm)
+    end
     swarm.best
 end
 

@@ -94,8 +94,11 @@ end
 
 # ╔═╡ 14da7499-9e0e-4901-8ac3-f666a8fd2189
 begin
+	bool_vec_cost(chain, pos) =
+		SupplyChains.penalized_cost(chain, pos, chain.costs.unitary)
+
 	solutions = all_binaries(10)
-	costs = [SupplyChains.particle_cost(chain, s) for s in solutions]
+	costs = [bool_vec_cost(chain, s) for s in solutions]
 	valid_costs = [c for c in costs if c < 10^5]
 	histogram(valid_costs)
 end
@@ -109,10 +112,10 @@ md"""
 """
 
 # ╔═╡ 09c89e97-c78e-445b-9ce2-0b173591898a
-best_particle, best_flow = SupplyChains.optimize(chain, steps = 200)
+swarm = SupplyChains.swarm_optimizer(chain)
 
 # ╔═╡ 3e830caa-ecee-4303-a26b-f3ce8180272e
-SupplyChains.particle_cost(chain, best_particle)
+SupplyChains.optimize(swarm)
 
 # ╔═╡ 54d3d36f-8613-420f-8ba0-a42893b8db3c
 md"""

@@ -134,8 +134,9 @@ mutable struct Swarm
     β
 
     function Swarm(particles::T, obj_fn; α=0.2, β=0.5, kwargs...) where T <: Particles
-        costs = mapslices(obj_fn, particles.pos, dims=1)
-        best_pos = argmin(costs)[2]
+        costs = particles_cost(particles, obj_fn)
+        best = argmin(costs)
+        best_pos = isa(best, Int) ? best : best[2]
         new(particles, (particles.pos[:, best_pos], costs[best_pos]), obj_fn, costs, α, β)
     end
 end
