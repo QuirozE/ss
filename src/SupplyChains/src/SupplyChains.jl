@@ -235,6 +235,7 @@ function optimal_load(chain, pos; optimizer = HiGHS.Optimizer)
     s = size(chain)
     caps = chain.capacities
     m = Model(optimizer)
+    set_silent(m)
 
     @variable(m, 0 <= xsp[1:s[1], 1:s[2]])
     @variable(m, 0 <= xpd[1:s[2], 1:s[3]])
@@ -314,9 +315,10 @@ function swarm_optimizer(chain; num_particles=16, use_lp=true)
     Swarm(BoolParticles(map(x -> x, particles)), optim)
 end
 
-function optimize(swarm; steps = 200)
-    for _ in 1:steps
+function optimize(swarm; steps = 100)
+    for i in 1:steps
         ParticleSwarm.step!(swarm)
+        @info "At step $i, best cost: $(swarm.best[2])"
     end
     swarm.best
 end
