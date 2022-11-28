@@ -12,11 +12,11 @@ quickactivate("..", "ss")
 
 # ╔═╡ b905daf4-f8a3-4f69-ad2c-ac0961899881
 begin
-	using Random
-	using Plots
-	using BenchmarkTools
-	using ParticleSwarm
-	using Graphs, GraphRecipes, SimpleWeightedGraphs
+        using Random
+        using Plots
+        using BenchmarkTools
+        using ParticleSwarm
+        using Graphs, GraphRecipes, SimpleWeightedGraphs
 end
 
 # ╔═╡ 7370651c-bf0c-11eb-024d-7526a5c8ed91
@@ -48,16 +48,16 @@ entonces la posición en el tiempo ``t+1`` está dada por
 
 ```math
 \begin{align*}
-	v^{t+1}_{i} &=
-	v^{t}_{i} + \alpha \epsilon_{1}(x_{i}-\textbf{x}_{i}) 
-	+ \beta \epsilon_{2}(x_{i} - \textbf{g})\\
-	x^{t+1}_{i} &= x^{t}_{i} + v^{t+1}_{i}
+        v^{t+1}_{i} &=
+        v^{t}_{i} + \alpha \epsilon_{1}(x_{i}-\textbf{x}_{i})
+        + \beta \epsilon_{2}(x_{i} - \textbf{g})\\
+        x^{t+1}_{i} &= x^{t}_{i} + v^{t+1}_{i}
 \end{align*}
 ```
 
 Donde ``\epsilon_{1}, \epsilon_{2}`` son vectores aleatorios con entradas en el
 rango ``[0, 1]``, ``\alpha, \beta`` son parámetros globales para determinar que tan
-aleatorio será el movimiento de las partículas y ``\textbf{x}_{i}, \textbf{g}`` son 
+aleatorio será el movimiento de las partículas y ``\textbf{x}_{i}, \textbf{g}`` son
 las mejores posiciones encontradas de ``x_{i}`` y globalmente.
 """
 
@@ -75,8 +75,8 @@ Al no tener que usar la mejor posición de la partícula, se pueden simplificar 
 
 ```math
 \begin{align*}
-	v^{t+1}_{i} &= v^{t}_{i} + \alpha \epsilon + \beta (x_{i} - \textbf{g})\\
-	x^{t+1}_{i} &= x^{t}_{i} + v^{t+1}_{i}
+        v^{t+1}_{i} &= v^{t}_{i} + \alpha \epsilon + \beta (x_{i} - \textbf{g})\\
+        x^{t+1}_{i} &= x^{t}_{i} + v^{t+1}_{i}
 \end{align*}
 ```
 
@@ -104,8 +104,8 @@ Con fines ilustrativos, se intentará minimizar la [función de Michelewicz]
 
 ```math
 f(x_{1}, \dots, x_{d}) = - \sum_{i=1}^{d}{
-	\sin{x_{i}}
-	\sin^{2m}(\frac{ix_{i}^{2}}{\pi})
+        \sin{x_{i}}
+        \sin^{2m}(\frac{ix_{i}^{2}}{\pi})
 }
 ```
 
@@ -118,8 +118,8 @@ f(x; m = 10) = - sin(x[1])*(sin(x[1]^2/π)^(2*m)) - sin(x[2])*(sin(2*x[2]^2/π)^
 
 # ╔═╡ 3edce3a8-fc84-43ca-8d5f-383ec45387a8
 begin
-	xk = range(0, 4, step=0.1)
-	surface(xk, xk, (x, y) -> f([x, y]))
+        xk = range(0, 4, step=0.1)
+        surface(xk, xk, (x, y) -> f([x, y]))
 end
 
 # ╔═╡ 3188e707-fc77-40cb-acbb-2ac92cd5641b
@@ -137,17 +137,17 @@ optimización.
 
 # ╔═╡ 83dde1eb-2f6f-4032-bc39-2b8cefab91be
 begin
-	swarm = Swarm(2, f, type = ParticleSwarm.apso, num_particles = 20, range = 0:0.01:6)
+        swarm = Swarm(2, f, type = ParticleSwarm.apso, num_particles = 20, range = 0:0.01:6)
 
-	anim = @animate for i in 1:10
-		step!(swarm)
-		x = [p[1] for p in eachcol(swarm.particles.pos)]
-		y = [p[2] for p in eachcol(swarm.particles.pos)]
-		contour(xk, xk, (x, y) -> f([x, y]))
-		scatter!(x, y, label="")
-	end
-	
-	gif(anim, "/tmp/anim_fps1.gif", fps = 1)
+        anim = @animate for i in 1:10
+                step!(swarm)
+                x = [p[1] for p in eachcol(swarm.particles.pos)]
+                y = [p[2] for p in eachcol(swarm.particles.pos)]
+                contour(xk, xk, (x, y) -> f([x, y]))
+                scatter!(x, y, label="")
+        end
+
+        gif(anim, "/tmp/anim_fps1.gif", fps = 1)
 end
 
 # ╔═╡ 37c0d3ff-f84b-43c3-8194-e096acaa422a
@@ -158,10 +158,10 @@ fue encontrada en $(swarm.best[1]), con valor de $(swarm.best[2]).
 
 # ╔═╡ 4428ccff-ff9d-47b1-a1f9-d206b5018d0f
 begin
-	x = [p[1] for p in eachcol(swarm.particles.pos)]
-	y = [p[2] for p in eachcol(swarm.particles.pos)]
-	contour(xk, xk, (x, y) -> f([x, y]))
-	scatter!(x, y, label="")
+        x = [p[1] for p in eachcol(swarm.particles.pos)]
+        y = [p[2] for p in eachcol(swarm.particles.pos)]
+        contour(xk, xk, (x, y) -> f([x, y]))
+        scatter!(x, y, label="")
 end
 
 # ╔═╡ 7be83d4d-71ec-4efc-8368-544d39ccd3e1
@@ -171,7 +171,7 @@ tiene que colocar todo el código anterior en una función.
 """
 
 # ╔═╡ 7c3c9f60-c070-4e99-8f06-72c870345413
-@benchmark pso(f, 2, steps=1000)
+# @benchmark pso(f, 2, steps=1000)
 
 # ╔═╡ e2b3dc4c-f771-4d15-9577-528b98680236
 
@@ -189,7 +189,7 @@ Como su nombre lo indica, la partículas solo pueden tomar posiciones en ``\math
 
 # ╔═╡ 8ebedcdd-8063-4c0a-9200-b3c71c2b458d
 md"""
-La velocidad no está acotada entre ``[0, 1]``, por lo que se necesita una función que mapée valores de ``\mathbb{R}`` a ``[0, 1]``. Una opción común es la función logística 
+La velocidad no está acotada entre ``[0, 1]``, por lo que se necesita una función que mapée valores de ``\mathbb{R}`` a ``[0, 1]``. Una opción común es la función logística
 
 ```math
 \sigma(x) = \frac{1}{1 + e^{-x}}
@@ -198,7 +198,7 @@ La velocidad no está acotada entre ``[0, 1]``, por lo que se necesita una funci
 Con esta, una velocidad ``v^{t}``, la posición ``x^{t+1}`` se puede definir como
 
 ```math
-x^{t+1}_{i} = \begin{cases} 
+x^{t+1}_{i} = \begin{cases}
   1, r < \sigma(v^{t}_{i}) \\
   0, \text{en otro caso}
 \end{cases}
@@ -221,8 +221,8 @@ Además de actualizar la posición, se debe actualizar la velocidad usando la po
 Es decir, basta con tomar ``v_{i} - v'_{i}``, que es precisamente la operación  original realizada para actualizar de la velocidad respecto a las mejores posiciones.
 
 ```math
-v^{t+1}_{i} = v^{t}_{i} + \alpha \epsilon_{1}(x_{i}-\textbf{x}_{i}) 
-	+ \beta \epsilon_{2}(x_{i} - \textbf{g})
+v^{t+1}_{i} = v^{t}_{i} + \alpha \epsilon_{1}(x_{i}-\textbf{x}_{i})
+        + \beta \epsilon_{2}(x_{i} - \textbf{g})
 ```
 """
 
@@ -235,11 +235,11 @@ Intentemos encontrar la subgráfica generadora mínima de una gráfica completa 
 
 # ╔═╡ 61bfc818-3a1c-48a9-8663-8d3156194d9f
 begin
-	n = 5
-	g = SimpleWeightedGraph(n)
-	for i = 1:n, j = (i+1):n
-		add_edge!(g, i, j, (i*j)/10)
-	end
+        n = 5
+        g = SimpleWeightedGraph(n)
+        for i = 1:n, j = (i+1):n
+                add_edge!(g, i, j, (i*j)/10)
+        end
 end
 
 # ╔═╡ 183caa56-357d-4a37-a699-962ce6a99c68
@@ -252,21 +252,21 @@ Para codificar las gráficas generadoras como vectores booleanos, se van a enume
 
 # ╔═╡ 91f2cf77-8507-4e38-908e-930dae3483a4
 function ith_edge(i)
-	n = ceil((1 + √(1 + 8 * i)) / 2)
-	offset = i - ((n - 1) * (n - 2))/2
-	Edge(Int(n), Int(offset))
+        n = ceil((1 + √(1 + 8 * i)) / 2)
+        offset = i - ((n - 1) * (n - 2))/2
+        Edge(Int(n), Int(offset))
 end
 
 # ╔═╡ bfe74a53-d817-4e40-9270-6b768f9c8f19
 function decode_subgraph(g, choices)
-	edges = [ith_edge(i) for (i, ok) in enumerate(choices) if ok]
-	gs, _ = induced_subgraph(g, edges)
-	gs
+        edges = [ith_edge(i) for (i, ok) in enumerate(choices) if ok]
+        gs, _ = induced_subgraph(g, edges)
+        gs
 end
 
 # ╔═╡ a2a08ba3-1677-4060-b022-82982b038cd1
 function total_weight(g)
-	sum(g.weights)/2
+        sum(g.weights)/2
 end
 
 # ╔═╡ 1154b1d8-7e66-4c31-8dbd-ab71b54866e7
@@ -278,21 +278,21 @@ Para dar preferencia a las que las generadoras, se penaliza a todas las subgráf
 
 # ╔═╡ 50d9ec6e-ccd6-49fb-9360-b682179b8fab
 function penalized_cost(g, x)
-	h = decode_subgraph(g, x)
-	penalty = nv(h) < nv(g) ? (nv(g) - nv(h)) : 0
-	return total_weight(h) + penalty
+        h = decode_subgraph(g, x)
+        penalty = nv(h) < nv(g) ? (nv(g) - nv(h)) : 0
+        return total_weight(h) + penalty
 end
 
 # ╔═╡ b8dd3676-9a81-42b8-899c-2df7da55d9d4
 begin
-	num_edges = Int((n * (n - 1)) / 2)
-	b_swarm = Swarm(num_edges, x -> penalized_cost(g, x), type = ParticleSwarm.bpso, num_particles = 20)
+        num_edges = Int((n * (n - 1)) / 2)
+        b_swarm = Swarm(num_edges, x -> penalized_cost(g, x), type = ParticleSwarm.bpso, num_particles = 20)
 
-	for i in 1:50
-		step!(b_swarm)
-	end
-	
-	best_subgraph = decode_subgraph(g, b_swarm.best[1])
+        for i in 1:50
+                step!(b_swarm)
+        end
+
+        best_subgraph = decode_subgraph(g, b_swarm.best[1])
 end
 
 # ╔═╡ e43fb917-947f-4b4c-9f73-862cee20d305

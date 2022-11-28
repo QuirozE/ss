@@ -17,7 +17,10 @@ centers have a maximum capacity, and selling points have a demand.
 """
 module SupplyChains
 
-using LinearAlgebra, ParticleSwarm
+using HiGHS
+using JuMP
+using LinearAlgebra
+using ParticleSwarm
 
 export Capacity, Flow, Cost, SupplyChain, size, length
 
@@ -91,7 +94,7 @@ function Base.:(==)(f1::Flow, f2::Flow)
 end
 
 """
-Given a flow, put to zero all weights related to active plants and active dists.
+Given a flow, put to zero all the inactive plants and dist centers weights.
 """
 function active_flow(e, active_plants, active_dists)
     plants_matrix = Diagonal(active_plants)
@@ -195,24 +198,79 @@ function split_pos(s::SupplyChain, pos_vec)
     (pos_vec[1:dims[2]], pos_vec[dims[2]+1:l])
 end
 
-function is_feasible(s, pos_vec)
-    active_plants, active_dists = split_pos(s, pos_vec)
-    plants_potential = transpose(active_plants) * s.capacities.plants
-    dists_potential = transpose(active_dists) * s.capacities.distributors
+function is_feasible(chain, pos_vec)
+    active_plants, active_dists = split_pos(chain, pos_vec)
 
-    demand = sum(s.capacities.clients)
+    if sum(active_plants) > chain.max_plants
+        false
+    elseif sum(active_dists) > chain.max_distributors
+        false
+    else
+        plants_potential = transpose(active_plants) * chain.capacities.plants
+        dists_potential = transpose(active_dists) * chain.capacities.distributors
 
-    demand <= plants_potential && demand <= dists_potential
+        demand = sum(chain.capacities.clients)
+
+        demand <= plants_potential && demand <= dists_potential
+    end
 end
 
 mutable struct ChainParams
     chain
     loads
+    best_load
     use_lp
+
+    function ChainParams(chain, particles, use_lp)
+        loads = [optimal_load(chain, p) for p in eachcol(particles)]
+        s = size(particles)
+        best_pos = argmin(
+            [penalized_cost(chain, particles[:, i], loads[i]) for i in 1:s[2]]
+        )
+        new(chain, loads, loads[best_pos], use_lp)
+    end
 end
 
-function optimal_load(s, _)
-    s.costs.unitary
+function optimal_load(chain, pos; optimizer = HiGHS.Optimizer)
+    s = size(chain)
+    caps = chain.capacities
+    m = Model(optimizer)
+    set_silent(m)
+
+    @variable(m, 0 <= xsp[1:s[1], 1:s[2]])
+    @variable(m, 0 <= xpd[1:s[2], 1:s[3]])
+    @variable(m, 0 <= xdc[1:s[3], 1:s[4]])
+
+    @constraint(m, [i = 1:s[1]], sum(xsp[i, j] for j in 1:s[2]) <= caps.suppliers[i])
+    @constraint(m, [i = 1:s[2]], sum(xpd[i, j] for j in 1:s[3]) <= caps.plants[i])
+    @constraint(m, [i = 1:s[3]], sum(xdc[i, j] for j in 1:s[4]) <= caps.distributors[i])
+    @constraint(m, [j = 1:s[4]], sum(xdc[i, j] for i in 1:s[3]) >= caps.clients[j])
+
+    @constraint(
+        m,
+        [j = 1:s[2]],
+        sum(xsp[i, j] for i in 1:s[1]) == sum(xpd[j, k] for k in 1:s[3])
+    )
+    @constraint(
+        m,
+        [j = 1:s[3]],
+        sum(xpd[i, j] for i in 1:s[2]) == sum(xdc[j, k] for k in 1:s[4])
+    )
+
+    ap, ad = split_pos(chain, pos)
+    flow_cost_vec = transpose(vec(active_flow(chain.costs.unitary, ap, ad)))
+    @objective(
+        m,
+        Min,
+        flow_cost_vec * [vec(xsp); vec(xpd); vec(xdc)]
+    )
+
+    optimize!(m)
+    opt_sp = [value(xsp[i, j]) for i in 1:s[1], j in 1:s[2]]
+    opt_pd = [value(xpd[i, j]) for i in 1:s[2], j in 1:s[3]]
+    opt_dc = [value(xdc[i, j]) for i in 1:s[3], j in 1:s[4]]
+
+    Flow(opt_sp, opt_pd, opt_dc)
 end
 
 function penalized_cost(chain, pos, load)
@@ -229,34 +287,38 @@ function ParticleSwarm.particles_cost(p::BoolParticles, c::ChainParams)
         c.loads = mapslices(pos -> optimal_load(c.chain, pos), p.pos, dims=1)
     end
 
-    map(
+    new_costs = map(
         i -> penalized_cost(c.chain, p.pos[:, i], c.loads[i]),
         axes(p.pos, 2)
     )
+
+    best_pos = argmin(new_costs)
+    c.best_load = c.loads[best_pos]
+
+    new_costs
 end
 
-function swarm_optimizer(s; num_particles=16, use_lp=false)
-    dims = size(s)
+function swarm_optimizer(chain; num_particles=16, use_lp=true)
+    dims = size(chain)
     vec_l = dims[2] + dims[3]
     particles = zeros(Bool, vec_l, num_particles)
     i = 1
     while i <= num_particles
         p = rand(Bool, vec_l)
-        if is_feasible(s, p)
+        if is_feasible(chain, p)
             particles[:, i] = p
             i = i + 1
         end
     end
 
-    loads = [deepcopy(s.costs.unitary) for _ in 1:num_particles]
-    optim = ChainParams(s, loads, use_lp)
-    optim
+    optim = ChainParams(chain, particles, use_lp)
     Swarm(BoolParticles(map(x -> x, particles)), optim)
 end
 
-function optimize(swarm; steps = 200)
-    for _ in 1:steps
+function optimize(swarm; steps = 100)
+    for i in 1:steps
         ParticleSwarm.step!(swarm)
+        @info "At step $i, best cost: $(swarm.best[2])"
     end
     swarm.best
 end

@@ -66,49 +66,38 @@ chain = SupplyChain(cap, cost, 4, 4)
 # ╔═╡ 8afc4759-3806-43a2-93ee-3db7c1a66d68
 md"""
 En este ejemplo, la cadena de suministros tiene $(size(chain)[1]) proveedores, $(size(chain)[2]) plantas de ensamblaje, $(size(chain)[3]) plantas de distribuión y $(size(chain)[4]) punto de venta.
+
+Se busca cumplir la demanada mientras se minimice el costo de operación.
 """
 
-# ╔═╡ 16f7c9d8-bda4-4fd0-aec8-22cb9f0a2d2f
+# ╔═╡ 3866d9d6-1b67-4da0-b8df-4fac9a03671a
 md"""
-Se busca cumplir la demanada mientras se minimice el costo de operación. Vamos a explorar algunas maneras de aproximar esto.
+## Optimizando
+
+El problema se puede dividir en dos
+- Elegir que plantas de ensamblaje y puntos de distribución hay que abrir.
+- Elegir la cantidad de productos a transportar entre cada punto.
+
+Curiosamente, ambas dependen una de la otra, y ambas tienen restricciones entre sí. Fijando la solución a uno se puede analizar el otro más fácilmente.
 """
 
-# ╔═╡ f70d4e66-1537-4a51-aab5-bf1a04d8b48f
+# ╔═╡ dc36a7d2-ded1-4a47-a352-a8e5482df169
 md"""
-## Medir la calidad de una solución
+### Optimizando puntos abiertos
 
-Para simplificar el problema, primero vamos a fijar un flujo, para solo optimizar cuáles plantas de ensamblaje y centro de distribución hay que abrir. En este caso hay 5+5 = 10 deciciones a tomar, lo cuál resulta en ``2^{10} = 1024`` posibles soluciones. Esto es manejable, por lo que se pueden calcular todas.
-
-Con esto se puede verificar la frecuencia de los costos para determinar la calidad de las soluciones propuestas.
+Esto es un problema sobre un espacio binario, por lo que se necesita una técnica de optimización discreta. La opción aquí implementada es la optimización binaria por enjambre de partículas. 
 """
 
-# ╔═╡ 254a8405-ae97-49a2-824e-ab81c82ab372
-function all_binaries(n)
-	if n < 2
-		[[true], [false]]
-	else
-		bs = all_binaries(n-1)
-		vcat([push!(copy(b), true) for b in bs], [push!(copy(b), false) for b in bs])
-	end
-end
-
-# ╔═╡ 14da7499-9e0e-4901-8ac3-f666a8fd2189
-begin
-	bool_vec_cost(chain, pos) =
-		SupplyChains.penalized_cost(chain, pos, chain.costs.unitary)
-
-	solutions = all_binaries(10)
-	costs = [bool_vec_cost(chain, s) for s in solutions]
-	valid_costs = [c for c in costs if c < 10^5]
-	histogram(valid_costs)
-end
-
-# ╔═╡ 697b20e8-e0dd-4ab5-aded-764982f69992
-dec_q = quantile(valid_costs, 0.0:0.1:1)
-
-# ╔═╡ 43ace981-60a8-4b08-9613-b2895d7eddfc
+# ╔═╡ 7101217f-5a2f-4c6c-9128-966581117eea
 md"""
-## Optimización binaria
+### Optimizando cargas
+
+Este problema se puede formalar como una optimización lineal. En Julia está el paquete [JuMP](https://jump.dev/), que es un front end para varias docenas de diferentes optimizadores lineales.
+"""
+
+# ╔═╡ b4afea92-38e9-4008-b10e-a89784d00c0f
+md"""
+### Todo junto
 """
 
 # ╔═╡ 09c89e97-c78e-445b-9ce2-0b173591898a
@@ -117,15 +106,8 @@ swarm = SupplyChains.swarm_optimizer(chain)
 # ╔═╡ 3e830caa-ecee-4303-a26b-f3ce8180272e
 SupplyChains.optimize(swarm)
 
-# ╔═╡ 54d3d36f-8613-420f-8ba0-a42893b8db3c
-md"""
-## Programación Lineal
-"""
-
-# ╔═╡ 26ad1160-341e-4323-a49d-4dfa5d990208
-md"""
-## Todo junto
-"""
+# ╔═╡ 1e013f02-896a-4f24-b661-c1809b3b7b8c
+swarm.obj.best_load
 
 # ╔═╡ Cell order:
 # ╠═a93399c0-5f25-11ed-3062-05932eb2164c
@@ -137,13 +119,10 @@ md"""
 # ╠═b00d24e1-d266-464c-82a9-03e3cbfa94ab
 # ╠═6c91b460-182c-42c2-969c-05b859fae887
 # ╟─8afc4759-3806-43a2-93ee-3db7c1a66d68
-# ╟─16f7c9d8-bda4-4fd0-aec8-22cb9f0a2d2f
-# ╟─f70d4e66-1537-4a51-aab5-bf1a04d8b48f
-# ╠═254a8405-ae97-49a2-824e-ab81c82ab372
-# ╠═14da7499-9e0e-4901-8ac3-f666a8fd2189
-# ╠═697b20e8-e0dd-4ab5-aded-764982f69992
-# ╟─43ace981-60a8-4b08-9613-b2895d7eddfc
+# ╟─3866d9d6-1b67-4da0-b8df-4fac9a03671a
+# ╟─dc36a7d2-ded1-4a47-a352-a8e5482df169
+# ╟─7101217f-5a2f-4c6c-9128-966581117eea
+# ╟─b4afea92-38e9-4008-b10e-a89784d00c0f
 # ╠═09c89e97-c78e-445b-9ce2-0b173591898a
 # ╠═3e830caa-ecee-4303-a26b-f3ce8180272e
-# ╟─54d3d36f-8613-420f-8ba0-a42893b8db3c
-# ╟─26ad1160-341e-4323-a49d-4dfa5d990208
+# ╠═1e013f02-896a-4f24-b661-c1809b3b7b8c
